@@ -22,12 +22,14 @@ if(isset($_POST['upload']))
 	$key = substr(hash('sha256', $key_password, true), 0, 32);//generate key for encryption using given password
 	$iv_length = openssl_cipher_iv_length($method);
 	$iv = openssl_random_pseudo_bytes($iv_length);
-	$data = base64_encode(openssl_encrypt($file_contents, $method, $key, OPENSSL_RAW_DATA, $iv));
-
-	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data) values(?,?,?)");
+	$data = openssl_encrypt($file_contents, $method, $key, OPENSSL_RAW_DATA, $iv);
+	//$data = openssl_decrypt(base64_decode($data), $method, $key, OPENSSL_RAW_DATA, $iv);
+	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, file_iv, file_key) values(?,?,?,?,?)");
 	$upload_file->bindParam(1,$name);
 	$upload_file->bindParam(2,$type);
 	$upload_file->bindParam(3,$data);
+	$upload_file->bindParam(4,$iv);
+	$upload_file->bindParam(5,$key);
 	$upload_file->execute();
 	//forces a redirect so a form isn't submitted multiple times
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
@@ -50,13 +52,11 @@ if(isset($_POST['upload']))
 	$files->execute();
 	while($row = $files->fetch())
 	{
-		/*$key_password = 'password';//read in password for key generation
-		$method = 'aes-256-cbc';//choose method of encryption; AES 256-bit
+		/*$key_password = "password";
+		$iv = $row['iv'];
+		$method = 'aes-256-cbc';
 		$key = substr(hash('sha256', $key_password, true), 0, 32);
-		$iv_length = openssl_cipher_iv_length($method);
-		$iv = openssl_random_pseudo_bytes($iv_length);
-		$decrypted = openssl_decrypt(base64_decode($row['file_data']), $method, $key, OPENSSL_RAW_DATA, $iv);
-		echo $decrypted;*/
+		$row['file_data'] = openssl_decrypt(base64_decode($row['file_data']), $method, $key, OPENSSL_RAW_DATA, $iv);*/
 		echo "<div>";
 		echo "<li><a href='display.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">".$row['file_name']."</a></li>";
 		echo "</div>";

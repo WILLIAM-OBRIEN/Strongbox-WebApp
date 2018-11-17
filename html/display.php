@@ -7,6 +7,11 @@
 	$files->bindParam(1,$id);
 	$files->execute();
 	$row = $files->fetch();
-	header("Content-Type:".$row['file_type']);
-	echo $row['file_data'];
+	//var_dump($row);
+	$key_password = "password";
+	$iv = $row['file_iv'];
+	$key = $row['file_key'];
+	$method = 'aes-256-cbc';
+	$file = openssl_decrypt($row['file_data'], $method, $key, OPENSSL_RAW_DATA, $iv);
+	echo $file;
 ?>
