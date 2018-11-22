@@ -8,12 +8,13 @@ if(isset($_SESSION['logged']))
 
 if(isset($_REQUEST['submit']))
 {
-	$username=$_REQUEST['UserUsername'];
-	$password=$_REQUEST['UserPassword'];
+	$username=$_REQUEST['username'];
+	$password=$_REQUEST['user_password'];
 
-	$con=mysqli_connect("35.205.202.112", "root", "mtD{];ttcY^{9@>`", "Users");
-	$query=mysqli_query($con, "SELECT * FROM users WHERE UserUsername='".$username."' AND UserPassword='".$password."'");	
-	$row=mysqli_fetch_array($query, MYSQLI_NUM);
+	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
+        $login_statement = $conn->prepare("select * from users where username='".$username."' and user_password ='".$password."'");
+	$login_statement->execute();
+	$row = $login_statement->fetch();
 	if(empty($row))
 	{
 		echo('<script>alert("Incorrect username/password!");</script>');
@@ -37,9 +38,9 @@ if(isset($_REQUEST['submit']))
 <center>
 <form method="post" action="login.php">
 
-    <input name="UserUsername" type="text" placeholder="Enter your username...">
+    <input name="username" type="text" placeholder="Enter your username...">
     <br>
-    <input name="UserPassword" type="password" placeholder="Enter your password...">
+    <input name="user_password"type="password" placeholder="Enter your password...">
     <br>
     <input type="submit" name="submit" value="Login">
     <br>

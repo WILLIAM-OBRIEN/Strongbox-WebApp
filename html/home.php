@@ -25,17 +25,11 @@ if(isset($_POST['upload']))
 	//file encryption process
 	$key_password = $_GET['key_encryption'];//read in password for key generation
 	$method = 'aes-256-cbc';//choose method of encryption; AES 256-bit
-	$key = substr(hash('sha256', $key_password, true), 0, 32);//generate key for encryption using given password
+	$key = hash('sha256', $key_password, true);//generate key for encryption using given password
 	$iv_length = openssl_cipher_iv_length($method);//decides initialization vector length
 	$iv = openssl_random_pseudo_bytes($iv_length);//generates an initialization vector for every encrypted file to prevent ciphertext duplicates
 	$data = openssl_encrypt($file_contents, $method, $key, OPENSSL_RAW_DATA, $iv);
 	//$data = openssl_decrypt(base64_decode($data), $method, $key, OPENSSL_RAW_DATA, $iv);//just quick way of checking if file is encrypted/decrypted correctly
-	//encrypt key
-	$keyPair = KeyPair::generateKeyPair(4096);
-	$secretKey = $keyPair->getPrivateKey();
-	$publicKey = $keyPair->getPublicKey();
-	$e_key = EasyRSA::encrypt($key, $publicKey);
-	//var_dump($e_key);
 	//inserting encrypted file values into sql database
 	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, file_iv, file_key) values(?,?,?,?,?)");
 	$upload_file->bindParam(1,$name);
@@ -53,7 +47,7 @@ if(isset($_POST['upload']))
 
 //form used to require file for upload and password which will be used to generate a key for encryption/decryption
 ?>
-	<form method="post" action="file.doc" enctype="multipart/form-data">
+	<form method="post" enctype="multipart/form-data">
         <div>
         <input type="file" name="file_upload" required/>
 	<input type="text" name="key_encryption" required>
