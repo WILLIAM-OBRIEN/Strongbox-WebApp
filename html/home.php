@@ -1,6 +1,12 @@
 <head><title>File Upload</title></head>
 <body>
 <?php
+//namespace rand;
+require __DIR__.'/vendor/autoload.php';
+require 'vendor/paragonie/easyrsa/src/EasyRSA.php';
+require 'vendor/paragonie/easyrsa/src/KeyPair.php';
+use \ParagonIE\EasyRSA\KeyPair;
+use \ParagonIE\EasyRSA\EasyRSA;
 session_start();
 if(!isset($_SESSION['logged']))
 {
@@ -24,6 +30,12 @@ if(isset($_POST['upload']))
 	$iv = openssl_random_pseudo_bytes($iv_length);//generates an initialization vector for every encrypted file to prevent ciphertext duplicates
 	$data = openssl_encrypt($file_contents, $method, $key, OPENSSL_RAW_DATA, $iv);
 	//$data = openssl_decrypt(base64_decode($data), $method, $key, OPENSSL_RAW_DATA, $iv);//just quick way of checking if file is encrypted/decrypted correctly
+	//encrypt key
+	$keyPair = KeyPair::generateKeyPair(4096);
+	$secretKey = $keyPair->getPrivateKey();
+	$publicKey = $keyPair->getPublicKey();
+	$e_key = EasyRSA::encrypt($key, $publicKey);
+	//var_dump($e_key);
 	//inserting encrypted file values into sql database
 	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, file_iv, file_key) values(?,?,?,?,?)");
 	$upload_file->bindParam(1,$name);
@@ -38,9 +50,10 @@ if(isset($_POST['upload']))
 		header("Location: home.php");
 	}
 }
+
+//form used to require file for upload and password which will be used to generate a key for encryption/decryption
 ?>
-	//form used to require file for upload and password which will be used to generate a key fro encryption/decryption
-	<form method="post" enctype="multipart/form-data">
+	<form method="post" action="file.doc" enctype="multipart/form-data">
         <div>
         <input type="file" name="file_upload" required/>
 	<input type="text" name="key_encryption" required>
@@ -56,7 +69,8 @@ if(isset($_POST['upload']))
 	while($row = $files->fetch())
 	{
 		echo "<div>";
-		echo "<li><a href='display.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">".$row['file_name']."</a></li>";
+		echo "<li><a href='download.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">".$row['file_name']."</a>";
+		echo "<a href='display.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">(Decrypted)</a></li>";
 		echo "</div>";
 	}
     ?>
