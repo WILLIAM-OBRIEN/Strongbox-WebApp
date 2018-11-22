@@ -1,37 +1,38 @@
 <?php
 	require __DIR__.'/vendor/autoload.php';
 	use phpseclib\Crypt\RSA;
-	//prevents users from accessing page directly
 	session_start();
 	if(!isset($_SESSION['logged']))
 	{
-		echo('<script>window.location="login.php"</script>');
-	}
+			echo('<script>window.location="login.php"</script>');
+	}//prevents users from accessing page directly
 	$username = $_SESSION['logged'];
-	//connect to online database
-	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
-	//allows for uploaded files to be downloaded unencrypted
+	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");//connect to online database
+
 	$id = isset($_GET['id'])? $_GET['id'] : "";
-	$files = $conn->prepare("select * from filestorage where f_id=?");
+	$files = $conn->prepare("select * from filestorage where f_id=?");//selects file with id selected on home page
 	$files->bindParam(1,$id);
 	$files->execute();
-	//places file contents of single row for download
-	$row = $files->fetch();
-	//begin key decryption process
-	$e_key = $row['file_key'];
-	$user_privkey = $conn->prepare("select user_privatekey from users where username='".$username."'");
-	$user_privkey->execute();
-	$key_row = $user_privkey->fetch();
-	$privatekey = $key_row['user_privatekey'];
-	$p_key = openssl_decrypt($privatekey, 'aes-128-cbc' , 'password', OPENSSL_RAW_DATA ,"1234567812345678");
+
+	$file_row = $files->fetch();//places file contents into single row for download
+
+	//-----begin key decryption process-----//
+	$fetch_privatekey = $conn->prepare("select user_password, user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
+	$fetch_privatekey->execute();
+	$key_row = $fetch_privatekey->fetch();
+	$encrypted_privatekey = $key_row['user_privatekey'];
+	$password = $key_row['user_password'];//get user password to decrypt user private key
+	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
 	$rsa = new RSA();
-	$rsa->loadKey($p_key);
-	$key = $rsa->decrypt($e_key);
-	//begins decryption process for uploaded file
-	$iv = $row['file_iv'];
-	//$key = $row['file_key'];
+	$rsa->loadKey($user_privatekey);
+	$encrypted_aes_key = $file_row['file_key'];
+	$aes_key = $rsa->decrypt($encrypted_aes_key);//decrypt file aes key using users (now decrypted) private key
+	//-----end key decryption process-----//
+
+	//-----begin file decryption process-----//
+	$iv = $file_row['file_iv'];//gets file iv for decryption
 	$method = 'aes-256-cbc';
-	$file = openssl_decrypt($row['file_data'], $method, $key, OPENSSL_RAW_DATA, $iv);
-	//prints out entire contents
-	echo $file;
+	$file = openssl_decrypt($file_row['file_data'], $method, $aes_key, OPENSSL_RAW_DATA, $iv);//decrypts aes encyption part of file	
+	echo $file;//prints (now decrypted) out entire file contents
+	//-----end file decryption process-----//
 ?>
