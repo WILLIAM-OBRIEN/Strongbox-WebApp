@@ -21,7 +21,8 @@ if(isset($_REQUEST['submit']))
 	}
 	else
 	{
-		$_SESSION['logged']="OK";
+		//$_SESSION['logged']="OK";
+		$_SESSION['logged']=$username;
 		echo('<script>window.location="home.php"</script>');
 	}
 }

@@ -9,20 +9,39 @@ if(isset($_REQUEST['submit']))
 	$Email=$_REQUEST['user_email'];
 	//generate the private key for user
 	$rsa = new RSA();
-	$keys = $rsa->createKey(2048);
+	$keys = $rsa->createKey(4096);
 	$Privatekey = $keys['privatekey'];
+	$Publickey = $keys['publickey'];
+	$E_privatekey = openssl_encrypt($Privatekey, 'aes-128-cbc' , $Password, OPENSSL_RAW_DATA , "1234567812345678");
+	//echo  $Encrypted_privatekey;
+
 	//connect to online mysql db
 	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
-	$register_user = $conn->prepare("insert into users (username, user_password, user_name, user_email, user_privatekey) values ('".$Username."','".$Password."','".$Name."','".$Email."','".$Privatekey."');");
+	$register_user = $conn->prepare("insert into users (username, user_password, user_name, user_email, user_privatekey, user_publickey) values (?,?,?,?,?,?);");
+	$register_user->bindParam(1,$Username);
+	$register_user->bindParam(2,$Password);
+	$register_user->bindParam(3,$Name);
+	$register_user->bindParam(4,$Email);
+	$register_user->bindParam(5,$E_privatekey);
+	$register_user->bindParam(6,$Publickey);
 	$register_user->execute();
-	#Go to the login page
+	//Go to the login page
 	echo('<script>window.location="login.php"</script>');
 }
+	/*$rsa = new RSA();
+        $keys = $rsa->createKey(4096);
+        $Privatekey = $keys['privatekey'];
+        $Publickey = $keys['publickey'];
+	echo $Privatekey;
+	echo "<br>";
+	$text = openssl_encrypt($Privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");
+	$text2 = openssl_decrypt($text, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");
+	echo $text2;*/
 ?>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Registration</title>
+<title>Registration | Strongbox</title>
 </head>
 <body>
 <center>
