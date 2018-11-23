@@ -22,6 +22,7 @@ if(isset($_REQUEST['submit']))
 	}
 	else
 	{
+		//creates a session of the user for their username and password, the password will be used to decrypt uploaded files.
 		$_SESSION['logged']=$username;
 		$_SESSION['password']=$password;
 		echo('<script>window.location="home.php"</script>');

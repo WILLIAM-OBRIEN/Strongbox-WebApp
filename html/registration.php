@@ -29,15 +29,6 @@ if(isset($_REQUEST['submit']))
 	//Go to the login page
 	echo('<script>window.location="login.php"</script>');
 }
-	/*$rsa = new RSA();
-        $keys = $rsa->createKey(4096);
-        $Privatekey = $keys['privatekey'];
-        $Publickey = $keys['publickey'];
-	echo $Privatekey;
-	echo "<br>";
-	$text = openssl_encrypt($Privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");
-	$text2 = openssl_decrypt($text, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");
-	echo $text2;*/
 ?>
 <html>
 <head>
