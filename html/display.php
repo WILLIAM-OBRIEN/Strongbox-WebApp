@@ -17,11 +17,12 @@
 	$file_row = $files->fetch();//places file contents into single row for download
 
 	//-----begin key decryption process-----//
-	$fetch_privatekey = $conn->prepare("select user_password, user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
+	$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
 	$fetch_privatekey->execute();
 	$key_row = $fetch_privatekey->fetch();
 	$encrypted_privatekey = $key_row['user_privatekey'];
-	$password = $key_row['user_password'];//get user password to decrypt user private key
+	//$password = $key_row['user_password'];//get user password to decrypt user private key
+	$password = $_SESSION['password'];
 	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
 	$rsa = new RSA();
 	$rsa->loadKey($user_privatekey);

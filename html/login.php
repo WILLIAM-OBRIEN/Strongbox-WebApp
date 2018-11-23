@@ -10,9 +10,10 @@ if(isset($_REQUEST['submit']))
 {
 	$username=$_REQUEST['username'];
 	$password=$_REQUEST['user_password'];
+	$password_hash = hash('sha512', $password, true);
 
 	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
-        $login_statement = $conn->prepare("select * from users where username='".$username."' and user_password ='".$password."'");
+	$login_statement = $conn->prepare("select * from users where username='".$username."' and password_hash ='".$password_hash."'");
 	$login_statement->execute();
 	$row = $login_statement->fetch();
 	if(empty($row))
@@ -21,8 +22,8 @@ if(isset($_REQUEST['submit']))
 	}
 	else
 	{
-		//$_SESSION['logged']="OK";
 		$_SESSION['logged']=$username;
+		$_SESSION['password']=$password;
 		echo('<script>window.location="home.php"</script>');
 	}
 }
