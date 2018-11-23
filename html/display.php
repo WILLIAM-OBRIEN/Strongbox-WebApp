@@ -26,14 +26,24 @@
 	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
 	$rsa = new RSA();
 	$rsa->loadKey($user_privatekey);
-	$encrypted_aes_key = $file_row['file_key'];
+	//decrypt aes key
+	$encrypted_aes_key = $file_row['aes_key'];
 	$aes_key = $rsa->decrypt($encrypted_aes_key);//decrypt file aes key using users (now decrypted) private key
+	//decrypt blowfish key
+	$encrypted_bf_key = $file_row['bf_key'];
+        $bf_key = $rsa->decrypt($encrypted_bf_key);
 	//-----end key decryption process-----//
 
 	//-----begin file decryption process-----//
-	$iv = $file_row['file_iv'];//gets file iv for decryption
-	$method = 'aes-256-cbc';
-	$file = openssl_decrypt($file_row['file_data'], $method, $aes_key, OPENSSL_RAW_DATA, $iv);//decrypts aes encyption part of file	
+	//---Blowfish decrypt---//
+	$data = $file_row['file_data'];
+	$method_2 = 'blowfish';
+	$bf_iv = $file_row['bf_iv'];
+	$data = openssl_decrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
+	//---AES decrypt---//
+	$aes_iv = $file_row['aes_iv'];//gets file iv for decryption
+	$method_1 = 'aes-256-cbc';
+	$file = openssl_decrypt($data, $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
 	echo $file;//prints (now decrypted) out entire file contents
 	//-----end file decryption process-----//
 ?>

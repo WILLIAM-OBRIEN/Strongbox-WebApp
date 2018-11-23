@@ -24,17 +24,20 @@ if(isset($_POST['upload']))
 	$file_contents = file_get_contents($file_data);
 
 	//-----begin file encryption process-----//
-	//--AES Encryption--//
-	//$key_password = $_GET['key_encryption'];//read in password for key generation
-	$key_password = random_bytes(128);
-	$method = 'aes-256-cbc';//choose method of encryption; AES 256-bit
-	$key = hash('sha512', $key_password, true);//generate key for encryption using given password
-	$iv_length = openssl_cipher_iv_length($method);//decides initialization vector length
-	$iv = openssl_random_pseudo_bytes($iv_length);//generates an initialization vector for every encrypted file to prevent ciphertext duplicates
-	$data = openssl_encrypt($file_contents, $method, $key, OPENSSL_RAW_DATA, $iv);
+        //--AES Encryption--//
+	$aes_key_password = random_bytes(128);
+	$method_1 = 'aes-256-cbc';//choose method of encryption; AES 256-bit
+	$aes_key = hash('sha512', $aes_key_password, true);//generate key for encryption using given password
+	$aes_iv_length = openssl_cipher_iv_length($method_1);//decides initialization vector length
+	$aes_iv = openssl_random_pseudo_bytes($aes_iv_length);//generates an initialization vector for every encrypted file to prevent ciphertext duplicates
+	$data = openssl_encrypt($file_contents, $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);
 	//--Blowfish Encryption--//
-	//--code here
-
+	$bf_key_password = random_bytes(128);
+	$method_2 = 'blowfish';//choose method of encryption; blowfish
+	$bf_key = hash('sha512', $bf_key_password, true);
+	$bf_iv_length = openssl_cipher_iv_length($method_2);
+        $bf_iv = openssl_random_pseudo_bytes($bf_iv_length);
+        $data = openssl_encrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
 	//-----end file encryption process-----//
 
 	//get users public key for encryption
@@ -46,21 +49,24 @@ if(isset($_POST['upload']))
 	$rsa->loadKey($publickey);
 
 	//-----begin key encryption process-----//
-	$encrypted_aes_key = $rsa->encrypt($key);
+	$encrypted_aes_key = $rsa->encrypt($aes_key);
+	$encrypted_bf_key = $rsa->encrypt($bf_key);
 	//-----end key encryption process-----//
 
 	//inserting encrypted file values into sql database
-	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, file_iv, file_key) values(?,?,?,?,?)");
+	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, aes_iv, bf_iv, aes_key, bf_key) values(?,?,?,?,?,?,?)");
 	$upload_file->bindParam(1,$name);
 	$upload_file->bindParam(2,$type);
 	$upload_file->bindParam(3,$data);
-	$upload_file->bindParam(4,$iv);
-	$upload_file->bindParam(5,$encrypted_aes_key);
+	$upload_file->bindParam(4,$aes_iv);
+	$upload_file->bindParam(5,$bf_iv);
+	$upload_file->bindParam(6,$encrypted_aes_key);
+	$upload_file->bindParam(7,$encrypted_bf_key);
 	$upload_file->execute();
 	//forces a redirect so a form isn't submitted multiple times
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
-			header("Location: home.php");
+		header("Location: home.php");
 	}
 }
 
