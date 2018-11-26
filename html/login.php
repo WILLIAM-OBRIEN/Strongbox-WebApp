@@ -34,7 +34,7 @@ if(isset($_REQUEST['submit']))
 <html>
 <head>
 <meta charset="utf-8">
-<title>Login</title>
+<title>Login | Strongbox</title>
 </head>
 
 <body>

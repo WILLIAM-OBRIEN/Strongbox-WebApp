@@ -1,5 +1,5 @@
 
-<head><title>File Upload</title></head>
+<head><title>File Upload | Strongbox</title></head>
 <body>
 <?php
 require __DIR__.'/vendor/autoload.php';
@@ -87,7 +87,7 @@ if(isset($_POST['upload']))
 	while($row = $files->fetch())
 	{
 		echo "<div>";
-		echo "<li><a href='download.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">".$row['file_name']."</a>";
+		echo "<li><a href='download.php?id=".$row['f_id']."' target='_blank' download='(encrypted)".$row['file_name']."'>".$row['file_name']."</a>";
 		echo "<a href='display.php?id=".$row['f_id']."' target='_blank' download=".$row['file_name'].">(Decrypted)</a></li>";
 		echo "</div>";
 	}
