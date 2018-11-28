@@ -1,22 +1,22 @@
 <?php
-$con=mysqli_connect("35.205.202.112", "root", "mtD{];ttcY^{9@>`", "Users");
+	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
 
-    $username = $_POST["username"];
-    $password = $_POST["password"];
+	$username = $_POST["username"];
+	$password = $_POST["password"];
+	$password_hash = hash('sha512', $password, true);
 
-    $statement = mysqli_prepare($con, "SELECT * FROM users WHERE UserUsername = ? AND UserPassword = ?");
-    mysqli_stmt_bind_param($statement, "ss", $username, $password);
-    mysqli_stmt_execute($statement);
+	$login_statement = $conn->prepare("select * from users where username='".$username."' and password_hash ='".$password_hash."'");
+	$login_statement->execute();
+	$row = $login_statement->fetch();
 
-    mysqli_stmt_store_result($statement);
-    mysqli_stmt_bind_result($statement, $userID, $username, $password, $name, $email );
+	if(empty($row))
+	{
+		$response["success"] = false;
+	}
+	else
+	{
+		$response["success"] = true;
+	}
 
-    $response = array();
-    $response["success"] = false;
-    while(mysqli_stmt_fetch($statement))
-    {
-        $response["success"] = true;
-    }
-
-    echo json_encode($response);
+	echo json_encode($response);
 ?>

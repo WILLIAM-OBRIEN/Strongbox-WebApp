@@ -29,8 +29,6 @@ if(isset($_REQUEST['submit']))
 	}
 }
 ?>
-
-<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
