@@ -37,6 +37,20 @@ $user_id = $user_row['u_id'];
 		echo "<a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a>";
 		echo "</div>";
 	}
+	echo "<h2>Shared Files</h2>";
+	$files = $conn->prepare("select * from sharedfilestorage where shared_id='".$user_id."'");
+        $files->execute();
+        //creates hyperlink for downloading files stored on database which are decrypted using stored key (will be changed to localised method in future)
+        while($row = $files->fetch())
+        {
+		$owner = $conn->prepare("select username from users where u_id='".$row['owner_id']."'");
+		$owner->execute();
+		$owner_name = $owner->fetch();
+                echo "<div>";
+                echo "<a href='download.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a>";
+		echo "   shared by ".$owner_name['username']." ";
+                echo "</div>";
+        }
 	?>
 	<br>
 	<form action="share.php">
