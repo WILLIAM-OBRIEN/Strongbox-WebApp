@@ -26,7 +26,20 @@ while($row = $files->fetch())
 	echo "<input name='fileID[]' type='checkbox' value='".$row['f_id']."'>".$row['file_name']."";
 	echo "</div>";
 }
+
+echo "<h2>Share with:</h2>";
+
+$users = $conn->prepare("select * from users");
+$users->execute();
+while($row = $users->fetch())
+{
+        echo "<div>";
+        echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."";
+        echo "</div>";
+}
 ?>
+</script>
+
 <input type="submit" value="submit"/>
 </form>
 </body>
