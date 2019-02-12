@@ -33,6 +33,7 @@
 	//-----begin file decryption process-----//
 	//---Blowfish decrypt---//
 	$data = $file_row['file_data'];
+	$data = gzdecode($data);
 	$method_2 = 'blowfish';
 	$bf_iv = $file_row['bf_iv'];
 	$data = openssl_decrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);

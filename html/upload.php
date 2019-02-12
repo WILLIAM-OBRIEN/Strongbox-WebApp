@@ -38,6 +38,7 @@ if(isset($_POST['upload']))
 	$bf_iv_length = openssl_cipher_iv_length($method_2);
         $bf_iv = openssl_random_pseudo_bytes($bf_iv_length);
         $data = openssl_encrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
+	$data = gzencode($data,9);//compresses file with maximum level of compression for gz (levels are 1-9)
 	//-----end file encryption process-----//
 	//get users public key for encryption
 	$fetch_publickey = $conn->prepare("select user_publickey from users where username='".$username."'");
