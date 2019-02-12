@@ -18,16 +18,18 @@ if(isset($_REQUEST['submit']))
         if(!empty($username_row ))
         {
                 echo('<script>alert("Username is already taken!");</script>');
-        }
+        }//should probably do something similar like this with email addresses
 	else
 	{
+		//makes sure the basic format is an email address
 		if(!preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/", $Email))
 		{
 			 echo('<script>alert("Invalid email!");</script>');
 		}
 		else
 		{
-			//send email for verifying account
+			//constructs the email that is going to be sent to the given email address
+			//this email will be used for verifying account
 			$subject = 'Signup | Verification';
 			$message = '
 			Thanks for signing up!
@@ -39,7 +41,7 @@ if(isset($_REQUEST['submit']))
 
 			Please click this link to activate your account:
 			http://www.strongboxencryption.com/verify.php?email='.$Email.'&hash='.$verify_hash.'';
-			exec(" echo '".$message."' | mail -s '".$subject."' ".$Email."");
+			exec(" echo '".$message."' | mail -s '".$subject."' ".$Email."");//sends email
 
 			//generate the private key for user
 			$rsa = new RSA();
