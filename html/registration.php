@@ -71,13 +71,17 @@ if(isset($_REQUEST['submit']))
 ?>
 <html>
 <head>
+<link rel="stylesheet" type="text/css" href="style.css">
 <meta charset="utf-8">
 <title>Registration | Strongbox</title>
+<link rel="shortcut icon" type="image/png" href="image.png">
 </head>
 <body>
+<div class="login-page">
+<div class="form">
 <center>
 <form method="post" action="registration.php">
-	<input type="text" name="username" placeholder="Enter a Username">
+	<input type="text" required name="username" placeholder="Enter a Username">
 	<br>
 	<input type="password" pattern=".{0}|.{7,}" required title="7 characters minimum" name="user_password" placeholder="Enter a Password">
 	<br>
@@ -87,7 +91,8 @@ if(isset($_REQUEST['submit']))
 	<br>
 	<input type="submit" required name="submit" value="Register">
 </form>
-<a href="login.php">Login Page</a>
+Have an account? <a href="login.php">Login here</a>
 </center>
+</div></div>
 </body>
 </html>

@@ -62,7 +62,6 @@ function insertfiles($file_id, $shared_id)
 	//-----begin file decryption process-----//
 	//---Blowfish decrypt---//
 	$data = $file_row['file_data'];
-	$data = gzdecode($data);
 	$method_2 = 'blowfish';
 	$bf_iv = $file_row['bf_iv'];
 	$data = openssl_decrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
@@ -93,7 +92,6 @@ function insertfiles($file_id, $shared_id)
 	$bf_iv_length = openssl_cipher_iv_length($method_2);
         $bf_iv = openssl_random_pseudo_bytes($bf_iv_length);
         $data = openssl_encrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
-	$data = gzencode($data,9);
 	//-----end file encryption process-----//
 	//get users public key for encryption
 	$fetch_publickey = $conn->prepare("select user_publickey from users where u_id='".$shared_id."'");

@@ -16,7 +16,7 @@ if(isset($_REQUEST['submit']))
 	$login_statement = $conn->prepare("select * from users where username='".$username."' and password_hash ='".$password_hash."'");
 	$login_statement->execute();
 	$row = $login_statement->fetch();
-	if(empty($row))
+	if(empty($row) || $row['active']== 0)
 	{
 		echo('<script>alert("Incorrect username/password!");</script>');
 	}
@@ -31,23 +31,28 @@ if(isset($_REQUEST['submit']))
 ?>
 <html>
 <head>
+<link rel="shortcut icon" type="image/png" href="image.png">
+<link rel="stylesheet" type="text/css" href="style.css">
 <meta charset="utf-8">
 <title>Login | Strongbox</title>
 </head>
-
 <body>
+<div class="login-page">
+<div class="form">
 <center>
 <form method="post" action="login.php">
-
+<img src=logofinal.png width="150" height="125"></img>
+<p><h2>Welcome to Strongbox!</h2></p><p></p>
     <input name="username" type="text" placeholder="Enter your username...">
     <br>
     <input name="user_password"type="password" placeholder="Enter your password...">
     <br>
-    <input type="submit" name="submit" value="Login">
+   <input type="submit" name="submit" value="Login">
     <br>
-    <a href="registration.php">Register</a>
+   Need an account? <a href="registration.php">Register here</a>
 
 </form>
 </center>
+</div></div>
 </body>
 </html>

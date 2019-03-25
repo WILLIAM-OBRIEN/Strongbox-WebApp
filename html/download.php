@@ -33,7 +33,6 @@
 	//-----begin file decryption process-----//
 	//---Blowfish decrypt---//
 	$data = $file_row['file_data'];
-	$data = gzdecode($data);
 	$method_2 = 'blowfish';
 	$bf_iv = $file_row['bf_iv'];
 	$data = openssl_decrypt($data, $method_2, $bf_key, OPENSSL_RAW_DATA, $bf_iv);
@@ -41,6 +40,7 @@
 	$aes_iv = $file_row['aes_iv'];//gets file iv for decryption
 	$method_1 = 'aes-256-cbc';
 	$file = openssl_decrypt($data, $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
+	$file = gzdecode($file);
 	echo $file;//prints (now decrypted) out entire file contents
 	//-----end file decryption process-----//
 ?>
