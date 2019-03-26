@@ -63,8 +63,7 @@ if(isset($_REQUEST['submit']))
 			$register_user->bindParam(8,$active);
 			$register_user->execute();
 			//Go to the login page
-			echo('<script>alert("Please check your email to verify your account!");</script>');
-			echo('<script>window.location="login.php"</script>');
+			echo('<script>window.location="thanks.php"</script>');
 		}
 	}
 }

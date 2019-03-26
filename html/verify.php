@@ -1,3 +1,13 @@
+<html>
+<head>
+<link rel="shortcut icon" type="image/png" href="image.png">
+<link rel="stylesheet" type="text/css" href="style.css">
+<meta charset="utf-8">
+<title>Thanks | Strongbox</title>
+</head>
+<body>
+<div class="login-page">
+<div class="form">
 <?php
 //php file that will parse the verification link in order to 'activate' the users account
 $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
@@ -26,7 +36,14 @@ if(isset($_GET['email']) && !empty($_GET['email']) AND isset($_GET['hash']) && !
 else
 {
 	echo('<script>alert("Error with verifying account!");</script>');
+	echo("<p>Error with verifying account! Have you already activated your account?</p>");
+	echo("<p></p><a href='login.php'>You can login here</a>");
 }
 
 
 ?>
+</div>
+</form>
+</div></div>
+</body>
+</html>
