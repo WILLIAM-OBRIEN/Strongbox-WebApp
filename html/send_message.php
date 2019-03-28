@@ -28,10 +28,12 @@ function sendmessage($message, $receiver)
 	$user_row = $user_chk->fetch();
 	$user_id = $user_row['u_id'];
 	//inserting encrypted file values into sql database
-        $upload_file = $conn->prepare("insert into messages(sender, receiver, message, time_sent, seen) values(?,?,?, CURRENT_TIMESTAMP , 0)");
+	$date = date("F j, g:i a");//date of file upload
+        $upload_file = $conn->prepare("insert into messages(sender, receiver, message, time_sent, date_recorded, seen) values(?,?,?,?, CURRENT_TIMESTAMP, 0)");
         $upload_file->bindParam(1,$user_id);
         $upload_file->bindParam(2,$receiver);
         $upload_file->bindParam(3,$message);
+	$upload_file->bindParam(4,$date);
         $upload_file->execute();
 }
 if($_SERVER['REQUEST_METHOD'] == 'POST')
