@@ -1,5 +1,12 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:300);
 
+* {
+ font-size: 100%;
+ font-family: "Roboto", sans-serif;
+}
+p{
+	font-family: "Roboto", sans-serif;
+}
 .login-page {
   width: 360px;
   padding: 0 0 0;
@@ -89,10 +96,13 @@ body {
 
 table {
   text-align: left;
+  font-family: "Roboto", sans-serif;
 }
 
-th {
+td {
+  
   padding:0 15px 0 15px;
+  font-family: "Roboto", sans-serif;
 }
 
 /*tab styling w3schools*/
@@ -125,7 +135,62 @@ th {
   background-color: #ccc;
 }
 
-/* Style the tab content */
+/*message tab styling (borrows from tab styling)*/
+.mtab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  width: 100px;
+  length: 100%;
+}
+
+.mtab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+.mtab button:hover {
+  background-color: #ddd;
+}
+
+.mtab button.active {
+  background-color: #ccc;
+}
+
+.mtab table {
+  font-family: "Roboto", sans-serif;
+}
+
+.m_table td {
+  vertical-align:top;
+  font-family: "Roboto", sans-serif;
+}
+
+.message {
+  display: none;
+  font-family: "Roboto", sans-serif;
+  -webkit-animation: fadeEffect 1s;
+  animation: fadeEffect 1s;
+  position: relative;
+  z-index: 1;
+  background: #FFFFFF;
+  max-width: 500px;
+  margin: 0 auto 100px;
+  padding-top: 20px;
+  padding-right: 45px;
+  padding-bottom: 20px;
+  padding-left: 45px;
+  text-align: left;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+
 .tabcontent {
   display: none;
   padding: 6px 12px;
