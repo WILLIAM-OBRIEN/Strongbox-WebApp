@@ -80,11 +80,11 @@ if(isset($_REQUEST['submit']))
 <div class="form">
 <center>
 <form method="post" action="registration.php">
-	<input type="text" required name="username" placeholder="Enter a Username">
+	<input type="text" required name="username" placeholder="Enter a Username" autocomplete="off">
 	<br>
 	<input type="password" pattern=".{0}|.{7,}" required title="7 characters minimum" name="user_password" placeholder="Enter a Password">
 	<br>
-	<input type="text" required name="user_name" placeholder="Enter your Name">
+	<input type="text" required name="user_name" placeholder="Enter your Name" autocomplete="off">
 	<br>
 	<input type="text" required name="user_email" placeholder="Enter your Email">
 	<br>

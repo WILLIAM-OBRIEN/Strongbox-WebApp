@@ -51,8 +51,10 @@ if(isset($_POST['upload']))
 	$encrypted_aes_key = $rsa->encrypt($aes_key);
 	$encrypted_bf_key = $rsa->encrypt($bf_key);
 	//-----end key encryption process-----//
+
+	$date = date("F j, g:i a");//date of file upload
 	//inserting encrypted file values into sql database
-	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, aes_iv, bf_iv, aes_key, bf_key, u_id) values(?,?,?,?,?,?,?,?)");
+	$upload_file = $conn->prepare("insert into filestorage(file_name, file_type, file_data, aes_iv, bf_iv, aes_key, bf_key, u_id, date) values(?,?,?,?,?,?,?,?,?)");
 	$upload_file->bindParam(1,$name);
 	$upload_file->bindParam(2,$type);
 	$upload_file->bindParam(3,$data);
@@ -61,6 +63,7 @@ if(isset($_POST['upload']))
 	$upload_file->bindParam(6,$encrypted_aes_key);
 	$upload_file->bindParam(7,$encrypted_bf_key);
 	$upload_file->bindParam(8,$user_id);
+	$upload_file->bindParam(9,$date);
 	$upload_file->execute();
 	//forces a redirect so a form isn't submitted multiple times
 	if($_SERVER['REQUEST_METHOD'] == 'POST')

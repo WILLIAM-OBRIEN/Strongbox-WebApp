@@ -16,9 +16,44 @@ if(isset($_REQUEST['submit']))
 	$login_statement = $conn->prepare("select * from users where username='".$username."' and password_hash ='".$password_hash."'");
 	$login_statement->execute();
 	$row = $login_statement->fetch();
-	if(empty($row) || $row['active']== 0)
+
+	//this whole section checks to see if the user has either entered incorrect information, account is unactivated or is banned for failed password attempts
+	$ban_statement = $conn->prepare("select u_id from users where username='".$username."'");
+        $ban_statement->execute();
+        $ban_row = $ban_statement->fetch();
+
+	//checks to see how many entries the user has entered in the 'ban_table', i.e. how many incorrect password attempts there have been over the past hour
+	$fail_attempts = $conn->prepare("select count(*) from ban_table where u_id=".$ban_row['u_id']."");
+        $fail_attempts->execute();
+        $fail_row = $fail_attempts->fetch();
+        $count = (int)$fail_row['count(*)'];
+
+	if(empty($row) || $row['active']== 0 || $count > 2)
 	{
-		echo('<script>alert("Incorrect username/password!");</script>');
+		if(!empty($ban_row) && $count <= 2)
+		{
+			//insert failed password attempt into the ban_table, 3 gives the user a 1 hour ban
+			$fail_insert = $conn->prepare("insert into ban_table(u_id, fail_attempt) values(?, CURRENT_TIMESTAMP)");
+			$fail_insert->bindParam(1,$ban_row['u_id']);
+                	$fail_insert->execute();
+			if($count == 0)
+			{
+				echo('<script>alert("Incorrect username/password! 2 attempts left...");</script>');
+			}
+			else if($count == 1)
+			{
+				echo('<script>alert("Incorrect username/password! 1 attempt left...");</script>');
+			}
+			else if($count > 1)
+                	{
+		                echo('<script>alert("Incorrect username/password! Your account has been banned for one hour...");</script>');
+	                }
+		}
+		else
+		{
+			echo('<script>alert("Incorrect username/password!");</script>');
+		}
+		echo('<script>window.location="login.php"</script>');
 	}
 	else
 	{
@@ -42,8 +77,8 @@ if(isset($_REQUEST['submit']))
 <center>
 <form method="post" action="login.php">
 <img src=logofinal.png width="150" height="125"></img>
-<p><h2>Welcome to Strongbox!</h2></p><p></p>
-    <input name="username" type="text" placeholder="Enter your username...">
+<p><h2>Welcome to <a href="explain.php">Strongbox!</a></h2></p><p></p>
+    <input name="username" type="text" placeholder="Enter your username..." autocomplete="off">
     <br>
     <input name="user_password"type="password" placeholder="Enter your password...">
     <br>
