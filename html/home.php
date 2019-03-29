@@ -12,29 +12,6 @@
   <button class="tablinks" id="inbox_tab"onclick="openTab(event, 'inbox')">Inbox</button>
   <button class="tablinks"  onclick="openTab(event, 'logout')"><b>Logout</b></button>
 </div>
-
-<style>
-#modal {
-    position: fixed;
-    font-family: Arial, Helvetica, sans-serif;
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 99999;
-    height: 100%;
-    width: 100%;
-}
-.modalbox {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    width: 80%;
-    padding: 20px;
-}
-</style>
-
 <script>
 	function close_modal(){
 	document.getElementById('modal').style.display = "none";
@@ -234,10 +211,21 @@ else
         <div id="inbox" class="file">
 	<link rel="stylesheet" type="text/css" href="style.css">
         <?php
+	$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
+	$fetch_privatekey->execute();
+	$key_row = $fetch_privatekey->fetch();
+	$encrypted_privatekey = $key_row['user_privatekey'];
+	$password = $_SESSION['password'];
+	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their passwo$
+	$rsa = new RSA();
+	$rsa->loadKey($user_privatekey);
+
 	$senders = $conn->prepare("select username, sender from messages join users on messages.sender=users.u_id where receiver=".$user_id." group by u_id");
         $senders->execute();
 	if($senders->rowCount()>0)
 	{
+		$method_1 = 'aes-256-cbc';
+
 		echo "<table class='m_table'>";
                 echo "<tr>";
                 echo "<td>";
@@ -256,13 +244,16 @@ else
 		echo "<td>";
 
 		//this is for the 'all' inbox messages
-		$get_messages = $conn->prepare("select username, message, time_sent, date_recorded from messages join users on messages.sender=users.u_id where receiver=".$user_id." order by date_recorded desc");
+		$get_messages = $conn->prepare("select aes_key, aes_iv, username, message, time_sent, date_recorded from messages join users on messages.sender=users.u_id where receiver=".$user_id." order by date_recorded desc");
                 $get_messages->execute();
 		echo "<div id='0'class='message'>";
 		echo "<table>";
                 while($m_row = $get_messages->fetch())
                 {
-                	echo "<tr><td class='message_text'>" .$m_row['message']."</td><td class='date_text'><p>" .$m_row['time_sent']."</p>from ".$m_row['username']."</tr>";
+			$aes_key = $rsa->decrypt($m_row['aes_key']);//decrypt file aes key using users (now decrypted) private key
+			$aes_iv = $m_row['aes_iv'];//gets file iv for decryption
+			$message = openssl_decrypt($m_row['message'], $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
+                	echo "<tr><td class='message_text'>" .$message."</td><td class='date_text'><p>" .$m_row['time_sent']."</p>from ".$m_row['username']."</tr>";
                 }
 		echo "</table>";
                 echo "</div>";
@@ -278,9 +269,14 @@ else
 			echo "<table>";
 			while($m_row = $get_messages->fetch())
 			{
-				echo "<tr><td class='message_text'>" .$m_row['message']." </td><td class='date_text'>".$m_row['time_sent']."</tr>";
+				$aes_key = $rsa->decrypt($m_row['aes_key']);//decrypt file aes key using users (now decrypted) private key
+        	                $aes_iv = $m_row['aes_iv'];//gets file iv for decryption
+	                        $message = openssl_decrypt($m_row['message'], $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
+				echo "<tr><td class='message_text'>" .$message." </td><td class='date_text'>".$m_row['time_sent']."</tr>";
 			}
 			echo "</table>";
+
+			//this is the reply function
 			echo "<form method='post' action='send_message.php' enctype='multipart/form-data'>";
 			echo "<p></p>";
 			echo "<input name='userID[]' style='display:none' checked type='checkbox' value='".$row['sender']."'>";
@@ -300,32 +296,6 @@ else
 	</table>
         </form>
         </div>
-<style>
-.date_text {
-  text-align: left;
-  font-size: 6px;
-  vertical-align: text-bottom;
-  white-space: nowrap ;
-  padding: 0;
-  padding-bottom: 5px;
-border-radius: 2px;
-  border-spacing: 5px;
-  border: 0.5px solid #ccc;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-.message_text {
-  padding: 0;
-  border-radius: 2px;
-  border-spacing: 5px;
-  border: 0.5px solid #ccc;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-
-</style>
 </div>
 </body>
 </html>

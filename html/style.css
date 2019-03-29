@@ -270,3 +270,45 @@ td {
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
 }
+#modal {
+    position: fixed;
+    font-family: Arial, Helvetica, sans-serif;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 99999;
+    height: 100%;
+    width: 100%;
+}
+.modalbox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    width: 80%;
+    padding: 20px;
+}
+.date_text {
+  text-align: left;
+  font-size: 6px;
+  vertical-align: text-bottom;
+  white-space: nowrap ;
+  padding: 0;
+  padding-bottom: 5px;
+border-radius: 2px;
+  border-spacing: 5px;
+  border: 0.5px solid #ccc;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.message_text {
+  padding: 0;
+  border-radius: 2px;
+  border-spacing: 5px;
+  border: 0.5px solid #ccc;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
