@@ -62,6 +62,23 @@ if(isset($_REQUEST['submit']))
 			$register_user->bindParam(7,$verify_hash);
 			$register_user->bindParam(8,$active);
 			$register_user->execute();
+
+			$fetch_publickey = $conn->prepare("select u_id, user_publickey from users where username='".$Username."'");
+		        $fetch_publickey->execute();
+        		$key_row = $fetch_publickey->fetch();
+		        $publickey = $key_row['user_publickey'];
+        		$rsa = new RSA();
+	        	$rsa->loadKey($publickey);
+
+			$message_key = rand(1000000,2000000000);//generate user message key (for sending messages)
+
+		        $encrypted_message_key = $rsa->encrypt($message_key);//encrypt user message key
+
+			$register_mkey = $conn->prepare("insert into message_keys (u_id, m_key) values(?,?)");
+                        $register_mkey->bindParam(1,$key_row['u_id']);
+			$register_mkey->bindParam(2,$encrypted_message_key);
+			$register_mkey->execute();
+
 			//Go to the login page
 			echo('<script>window.location="thanks.php"</script>');
 		}

@@ -10,6 +10,7 @@
   <button class="tablinks" id="share_tab"onclick="openTab(event, 'share')">Share files</button>
   <button class="tablinks" id="message_tab"onclick="openTab(event, 'message')">Send Message</button>
   <button class="tablinks" id="inbox_tab"onclick="openTab(event, 'inbox')">Inbox</button>
+  <button class="tablinks" id="friends_tab"onclick="openTab(event, 'friends')">Friends</button>
   <button class="tablinks"  onclick="openTab(event, 'logout')"><b>Logout</b></button>
 </div>
 <script>
@@ -188,12 +189,12 @@ else
 	<div id="message" class="file">
 	<form method="post" action="send_message.php" enctype="multipart/form-data">
 	<?php
-	$users = $conn->prepare("select * from users where u_id !=".$user_id."");
+	$users = $conn->prepare("select accept_friend, username from users join friends on users.u_id=friends.accept_friend where send_friend=".$user_id." and accepted=1;");
 	$users->execute();
 	while($row = $users->fetch())
 	{
         	echo "<label class='container'>";
-	        echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
+	        echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
         	echo "</label>";
 	}
 
@@ -224,8 +225,6 @@ else
         $senders->execute();
 	if($senders->rowCount()>0)
 	{
-		$method_1 = 'aes-256-cbc';
-
 		echo "<table class='m_table'>";
                 echo "<tr>";
                 echo "<td>";
@@ -243,20 +242,45 @@ else
 		echo "</td>";
 		echo "<td>";
 
+		//-----First lets get the private key, decrypt the message key and then decrypt and view the message-----//
+        	$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
+	        $fetch_privatekey->execute();
+        	$key_row = $fetch_privatekey->fetch();
+        	$encrypted_privatekey = $key_row['user_privatekey'];
+	        $password = $_SESSION['password'];
+	        $user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
+        	$rsa = new RSA();
+	        $rsa->loadKey($user_privatekey);
+
+		//code to get the receivers message key decrypt it using their private key and then decrypt the message
+        	$get_messagekey= $conn->prepare("select m_key from message_keys where u_id=".$user_id."");
+	        $get_messagekey->execute();
+        	$msg_row = $get_messagekey->fetch();
+	        $mkey = $msg_row['m_key'];
+
+        	//decrypt message key
+	        $mkey = $rsa->decrypt($mkey);
+
 		//this is for the 'all' inbox messages
-		$get_messages = $conn->prepare("select aes_key, aes_iv, username, message, time_sent, date_recorded from messages join users on messages.sender=users.u_id where receiver=".$user_id." order by date_recorded desc");
+		$get_messages = $conn->prepare("select username, u_id, message, time_sent, date_recorded from messages join users on messages.sender=users.u_id where receiver=".$user_id." order by date_recorded desc");
                 $get_messages->execute();
 		echo "<div id='0'class='message'>";
 		echo "<table>";
                 while($m_row = $get_messages->fetch())
                 {
-			$aes_key = $rsa->decrypt($m_row['aes_key']);//decrypt file aes key using users (now decrypted) private key
-			$aes_iv = $m_row['aes_iv'];//gets file iv for decryption
-			$message = openssl_decrypt($m_row['message'], $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
+                      	$fetch_friendval = $conn->prepare("select friend_val from friends where send_friend=".$m_row['u_id']." and accept_friend=".$user_id." and accepted=1");
+                        $fetch_friendval->execute();
+                        $f_row = $fetch_friendval->fetch();
+                        $friend_val = $f_row['friend_val'];
+                        $key = ((int)$friend_val * (int)$mkey) % 2048;
+
+			$message = openssl_decrypt($m_row['message'], 'aes-128-cbc' , $key, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts aes encyption part of file
                 	echo "<tr><td class='message_text'>" .$message."</td><td class='date_text'><p>" .$m_row['time_sent']."</p>from ".$m_row['username']."</tr>";
                 }
 		echo "</table>";
                 echo "</div>";
+
+
 
 		//create messages for each user found to have sent a message for this user
 		$senders = $conn->prepare("select username, sender  from messages join users on messages.sender=users.u_id where receiver=".$user_id." group by u_id");
@@ -265,13 +289,16 @@ else
                 {
 			$get_messages = $conn->prepare("select * from messages where sender=".$row['sender']." and receiver=".$user_id." order by date_recorded desc");
 			$get_messages->execute();
+			$fetch_friendval = $conn->prepare("select friend_val from friends where send_friend=".$row['sender']." and accept_friend=".$user_id." and accepted=1");
+		        $fetch_friendval->execute();
+        		$f_row = $fetch_friendval->fetch();
+	        	$friend_val = $f_row['friend_val'];
+			$key = ((int)$friend_val * (int)$mkey) % 2048;
 			echo "<div id='".$row['sender']."'class='message'>";
 			echo "<table>";
 			while($m_row = $get_messages->fetch())
 			{
-				$aes_key = $rsa->decrypt($m_row['aes_key']);//decrypt file aes key using users (now decrypted) private key
-        	                $aes_iv = $m_row['aes_iv'];//gets file iv for decryption
-	                        $message = openssl_decrypt($m_row['message'], $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
+	                        $message = openssl_decrypt($m_row['message'], 'aes-128-cbc' , $key, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts aes encyption part of file
 				echo "<tr><td class='message_text'>" .$message." </td><td class='date_text'>".$m_row['time_sent']."</tr>";
 			}
 			echo "</table>";
@@ -294,6 +321,37 @@ else
 	</td>
 	</tr>
 	</table>
+        </form>
+        </div>
+
+
+	<!--**********Friends**********-->
+        <div id="friends" class="file">
+	<form method="post" action="accept_request.php" enctype="multipart/form-data">
+        <?php
+	$requests = $conn->prepare("select send_friend, username from friends join users on friends.send_friend=users.u_id where accepted = 0 and accept_friend=".$user_id."");
+        $requests->execute();
+	if($requests->rowCount()>0)
+        {
+		while($row = $requests->fetch())
+        	{
+			//echo "<p>".$row['username']." sent you friend request: <a href='accept_request.php?id=".$row['send_friend']."' target='_blank'>Accept</a></p>";
+			
+		}
+	}
+
+	echo "<form method='post' action='friend_request.php' enctype='multipart/form-data'>";
+        $users = $conn->prepare("select * from users where u_id !=".$user_id."");
+        $users->execute();
+        while($row = $users->fetch())
+        {
+                echo "<label class='container'>";
+                echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
+                echo "</label>";
+        }
+
+        ?>
+        <input type="submit" name="send" value="Add friends"></input>
         </form>
         </div>
 </div>
