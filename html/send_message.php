@@ -9,7 +9,7 @@ if(!isset($_SESSION['logged']))
 
 $user_list = $_POST['userID'];
 $message = $_POST['message'];
-if(isset($_POST['send']))
+if(isset($_POST['send']) && isset($_POST['message']))
 {
         foreach($user_list as $u_list)
         {

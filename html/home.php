@@ -335,20 +335,36 @@ else
         {
 		while($row = $requests->fetch())
         	{
-			//echo "<p>".$row['username']." sent you friend request: <a href='accept_request.php?id=".$row['send_friend']."' target='_blank'>Accept</a></p>";
-			
+			echo "<input name='friend' type='checkbox' checked style='display:none' value='".$row['send_friend']."'>";
+			echo "<p>" .$row['username']. " sent you a friend request: <input type='submit' name='accept' value='Accept'></input></p>";
+//////////////////////////////////////////
 		}
 	}
-
+	echo "</form>";
 	echo "<form method='post' action='friend_request.php' enctype='multipart/form-data'>";
         $users = $conn->prepare("select * from users where u_id !=".$user_id."");
         $users->execute();
+
         while($row = $users->fetch())
         {
-                echo "<label class='container'>";
-                echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
-                echo "</label>";
-        }
+		$chk = 0;
+		$friends = $conn->prepare("select accept_friend, send_friend from friends where send_friend=".$user_id." or accept_friend=".$user_id."");
+        	$friends->execute();
+		while($accept_row = $friends->fetch())
+		{
+
+			if($row['u_id']!=$accept_row['accept_friend'] && $row['u_id']!=$accept_row['send_friend'])
+			{
+				$chk = 1;
+			}
+		}
+		if($chk == 0)
+		{
+			echo "<label class='container'>";
+			echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
+			echo "</label>";
+		}
+        }//doesnt prevent applying for a friend request if one has been already sent atm (the person with the request already applying for one)
 
         ?>
         <input type="submit" name="send" value="Add friends"></input>

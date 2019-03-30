@@ -1,20 +1,25 @@
 <?php
-        require __DIR__.'/vendor/autoload.php';
-        use phpseclib\Crypt\RSA;
-        session_start();
-        if(!isset($_SESSION['logged']))
-        {
-                        echo('<script>window.location="login.php"</script>');
-        }
+require __DIR__.'/vendor/autoload.php';
+use phpseclib\Crypt\RSA;
+session_start();
+if(!isset($_SESSION['logged']))
+{
+		echo('<script>window.location="login.php"</script>');
+}
+$id = $_POST['friend'];
+if(isset($_POST['accept']))
+{
+	acceptrequest($id);
+}
 
+function acceptrequest($id)
+{
         $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");//connect to online database
         $username = $_SESSION['logged'];
         $user_chk = $conn->prepare("select u_id from users where username='".$username."'");
         $user_chk->execute();
         $user_row = $user_chk->fetch();
         $user_id = $user_row['u_id'];
-
-	$id = isset($_GET['id'])? $_GET['id'] : "";
 
 	$fetch_baseval = $conn->prepare("select base_val from friends where send_friend=".$id." and accept_friend=".$user_id." and accepted=0");
 	$fetch_baseval->execute();
@@ -54,4 +59,5 @@
         $upload_file->execute();
 
 	header("Location: home.php");
+}
 ?>
