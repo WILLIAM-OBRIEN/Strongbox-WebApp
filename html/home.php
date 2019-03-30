@@ -31,7 +31,6 @@
 	document.getElementById(action).style.display = "block";
 	evt.currentTarget.className += " active";
 	}
-
 	function openMessages(evt, id) {
           var i, content, links;
           content = document.getElementsByClassName("message");
@@ -81,7 +80,7 @@ if($seen_msg->rowCount() > 0)
 }
 else
 {
-		echo "window.onload = function(){document.getElementById('upload_tab').click();}";
+		echo "window.onload = function(){document.getElementById('inbox_tab').click();}";
 		echo "</script>";
 }
 
@@ -110,7 +109,7 @@ else
 				$size = (int)strlen($row['file_data']);
 				$size = $size/1000000;
 				echo "<tr>";
-				echo "<td><a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
+				echo "<td><a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['id']."</a></td>";
 				if($size>=1){$size=round($size,1);echo "<td>". $size. "MB</td>";}
 				else{$size=round($size*1000,1);echo "<td>". $size. "KB</td>";}
 				echo "<td><font size=1>". $row['date']. "</font></td>";
@@ -199,7 +198,7 @@ else
 	}
 
 	?>
-	<input type="text" placeholder="Send a message..."name="message" autocomplete="off" required></input>
+	<input type="text" maxlength="1600" placeholder="Send a message..."name="message" autocomplete="off" required></input>
 	<input type="submit" name="send" value="Send"></input>
 	</form>
 	</div>
@@ -233,6 +232,7 @@ else
 		echo "<div class='mtab'>";
 		echo "<button class='links' id='all_msg' onclick='openMessages(event, 0)'>All Messages</button>";
 		echo "</div>";
+
 		while($row = $senders->fetch())
         	{
 			echo "<div class='mtab'>";
@@ -261,26 +261,7 @@ else
         	//decrypt message key
 	        $mkey = $rsa->decrypt($mkey);
 
-		//this is for the 'all' inbox messages
-		$get_messages = $conn->prepare("select username, u_id, message, time_sent, date_recorded from messages join users on messages.sender=users.u_id where receiver=".$user_id." order by date_recorded desc");
-                $get_messages->execute();
-		echo "<div id='0'class='message'>";
-		echo "<table>";
-                while($m_row = $get_messages->fetch())
-                {
-                      	$fetch_friendval = $conn->prepare("select friend_val from friends where send_friend=".$m_row['u_id']." and accept_friend=".$user_id." and accepted=1");
-                        $fetch_friendval->execute();
-                        $f_row = $fetch_friendval->fetch();
-                        $friend_val = $f_row['friend_val'];
-                        $key = ((int)$friend_val * (int)$mkey) % 2048;
-
-			$message = openssl_decrypt($m_row['message'], 'aes-128-cbc' , $key, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts aes encyption part of file
-                	echo "<tr><td class='message_text'>" .$message."</td><td class='date_text'><p>" .$m_row['time_sent']."</p>from ".$m_row['username']."</tr>";
-                }
-		echo "</table>";
-                echo "</div>";
-
-
+		$m_array = array();
 
 		//create messages for each user found to have sent a message for this user
 		$senders = $conn->prepare("select username, sender  from messages join users on messages.sender=users.u_id where receiver=".$user_id." group by u_id");
@@ -296,13 +277,19 @@ else
 			$key = ((int)$friend_val * (int)$mkey) % 2048;
 			echo "<div id='".$row['sender']."'class='message'>";
 			echo "<table>";
+			$i = 0;
+			$m_array[$i] = array();
 			while($m_row = $get_messages->fetch())
 			{
 	                        $message = openssl_decrypt($m_row['message'], 'aes-128-cbc' , $key, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts aes encyption part of file
-				echo "<tr><td class='message_text'>" .$message." </td><td class='date_text'>".$m_row['time_sent']."</tr>";
+				if (ctype_space($message)){$message="< User tried to send some dodgy code >";}
+				echo "<tr><td class='message_text'>" .$message." </td><td class='date_text'>".$m_row['time_sent']."</td></tr>";
+				$m_array[$i]['id'] = $row['username'];
+				$m_array[$i]['message'] = $message;
+				$m_array[$i]['date'] = $m_row['time_sent'];
+				$i++;
 			}
 			echo "</table>";
-
 			//this is the reply function
 			echo "<form method='post' action='send_message.php' enctype='multipart/form-data'>";
 			echo "<p></p>";
@@ -312,6 +299,22 @@ else
 			echo "</form>";
 			echo "</div>";
                 }
+
+		function sortFunction( $a, $b )
+		{
+                        return strtotime($b["date"]) - strtotime($a["date"]);
+                }
+                usort($m_array, "sortFunction");
+
+		echo "<div id='0'class='message'>";
+		echo "<table>";
+		$length = count($m_array);
+		for ($i=0;$i<=$length-1;$i++)
+		{
+			echo "<tr><td class='message_text'>" .$m_array[$i]['message']."</td><td class='date_text'><p>" .$m_array[$i]['date']."</p>from ".$m_array[$i]['id']."</td></tr>";
+		}
+		echo "</table>";
+		echo "</div>";
 	}
 	else
         {
@@ -337,7 +340,6 @@ else
         	{
 			echo "<input name='friend' type='checkbox' checked style='display:none' value='".$row['send_friend']."'>";
 			echo "<p>" .$row['username']. " sent you a friend request: <input type='submit' name='accept' value='Accept'></input></p>";
-//////////////////////////////////////////
 		}
 	}
 	echo "</form>";

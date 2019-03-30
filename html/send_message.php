@@ -9,6 +9,7 @@ if(!isset($_SESSION['logged']))
 
 $user_list = $_POST['userID'];
 $message = $_POST['message'];
+
 if(isset($_POST['send']) && isset($_POST['message']))
 {
         foreach($user_list as $u_list)
@@ -51,6 +52,8 @@ function sendmessage($message, $receiver)
 
 	$mkey = ((int)$friend_val * (int)$mkey) % 2048;
 	echo $mkey;
+
+        $message = filter_var($message, FILTER_SANITIZE_STRING);
 
 	//encrypt actual message
         $message = openssl_encrypt($message, 'aes-128-cbc' , $mkey, OPENSSL_RAW_DATA , "1234567812345678");

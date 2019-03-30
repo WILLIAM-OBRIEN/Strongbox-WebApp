@@ -178,10 +178,12 @@ td {
   font-family: "Roboto", sans-serif;
   -webkit-animation: fadeEffect 1s;
   animation: fadeEffect 1s;
+  max-width: 500px;
+  word-wrap: break-word;
   position: relative;
   z-index: 1;
   background: #FFFFFF;
-  max-width: 500px;
+  max-width: 350px;
   margin: 0 auto 100px;
   padding-top: 20px;
   padding-right: 45px;
@@ -310,5 +312,6 @@ border-radius: 2px;
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 2px;
+  max-width: 250px;
   padding-bottom: 2px;
 }
