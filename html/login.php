@@ -6,6 +6,11 @@ if(isset($_SESSION['logged']))
 	echo("<script>window.location='home.php'</script>");
 }
 
+if(isset($_SESSION['username']))
+{
+	session_destroy();
+}
+
 if(isset($_REQUEST['submit']))
 {
 	$username=$_REQUEST['username'];
@@ -58,10 +63,11 @@ if(isset($_REQUEST['submit']))
 	else
 	{
 		//creates a session of the user for their username and password, the password will be used to decrypt uploaded files.
-		$_SESSION['logged']=$username;
-		$_SESSION['password']=$password;
-		echo('<script>window.location="home.php"</script>');
+		$_SESSION['username']=$username;
+		$_SESSION['pwd']=$password;
+		echo('<script>window.location="authenticate.php"</script>');
 	}
+	//session_destroy();
 }
 ?>
 <html>

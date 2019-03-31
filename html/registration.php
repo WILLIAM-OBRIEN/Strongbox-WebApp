@@ -1,12 +1,12 @@
-
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
+
 if(isset($_REQUEST['submit']))
 {
 	$Username=$_REQUEST['username'];
 	$Password=$_REQUEST['user_password'];
-	$Name=$_REQUEST['user_name'];
+	$Phone_number=$_REQUEST['phone_number'];
 	$Email=$_REQUEST['user_email'];
 	$verify_hash = md5(rand(0,1000));//generates hash to verify email account for activation
 	$active = 0;
@@ -53,10 +53,10 @@ if(isset($_REQUEST['submit']))
 			$E_privatekey = openssl_encrypt($Privatekey, 'aes-128-cbc' , $Password, OPENSSL_RAW_DATA , "1234567812345678");
 
 			//insert statement for sql database
-			$register_user = $conn->prepare("insert into users (username, password_hash, user_name, user_email, user_privatekey, user_publickey, verify_hash, active) values (?,?,?,?,?,?,?,?);");
+			$register_user = $conn->prepare("insert into users (username, password_hash, phone_number, user_email, user_privatekey, user_publickey, verify_hash, active) values (?,?,?,?,?,?,?,?);");
 			$register_user->bindParam(1,$Username);
 			$register_user->bindParam(2,$password_hash);
-			$register_user->bindParam(3,$Name);
+			$register_user->bindParam(3,$Phone_number);
 			$register_user->bindParam(4,$Email);
 			$register_user->bindParam(5,$E_privatekey);
 			$register_user->bindParam(6,$Publickey);
@@ -114,7 +114,7 @@ function random_key($length)
 	<br>
 	<input type="password" pattern=".{0}|.{7,}" required title="7 characters minimum" name="user_password" placeholder="Enter a Password">
 	<br>
-	<input type="text" required name="user_name" placeholder="Enter your Name" autocomplete="off">
+	<input type="text" required name="phone_number" placeholder="Enter your full phone no. (eg, +35387...)" autocomplete="off">
 	<br>
 	<input type="text" required name="user_email" placeholder="Enter your Email">
 	<br>

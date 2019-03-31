@@ -109,7 +109,7 @@ else
 				$size = (int)strlen($row['file_data']);
 				$size = $size/1000000;
 				echo "<tr>";
-				echo "<td><a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['id']."</a></td>";
+				echo "<td><a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
 				if($size>=1){$size=round($size,1);echo "<td>". $size. "MB</td>";}
 				else{$size=round($size*1000,1);echo "<td>". $size. "KB</td>";}
 				echo "<td><font size=1>". $row['date']. "</font></td>";
@@ -160,18 +160,22 @@ else
 			echo "</label>";
 		}
 
-		echo "<h2>Share with:</h2>";
 
-		$users = $conn->prepare("select * from users where u_id != ". $user_id."");
-		$users->execute();
-		while($row = $users->fetch())
-		{
-			echo "<label class='container'>";
-			echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
-			echo "</label>";
+		$users = $conn->prepare("select accept_friend, username from users join friends on users.u_id=friends.accept_friend where send_friend=".$user_id." and accepted=1;");
+	        $users->execute();
+		if($users->rowCount()>0)
+       		{
+			echo "<h2>Share with:</h2>";
+			while($row = $users->fetch())
+			{
+				echo "<label class='container'>";
+				echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
+				echo "</label>";
+			}
+			echo "<center><input type='submit' value='Share File(s)'/></center>";
+			echo "</form>";
 		}
-		echo "<center><input type='submit' value='Share File(s)'/></center>";
-		echo "</form>";
+		else{echo "</br> Add friends to share files...";}
 	}
 	else
 	{
@@ -391,13 +395,12 @@ else
         }//doesnt prevent applying for a friend request if one has been already sent atm (the person with the request already applying for one)
 	if($no_friends == 0)
 	{echo "No other accounts to add...";}
-
 	else
 	{echo "<input type='submit' name='send' value='Add friends'></input>";}
-
         ?>
         </form>
         </div>
+
 </div>
 </body>
 </html>
