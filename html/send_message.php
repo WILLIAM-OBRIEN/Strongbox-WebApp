@@ -50,8 +50,8 @@ function sendmessage($message, $receiver)
         $row = $fetch_friendval->fetch();
 	$friend_val = $row['friend_val'];
 
-	$mkey = ((int)$friend_val * (int)$mkey) % 2048;
-	echo $mkey;
+	$prime_mod = "100000000000000000000000000000000000000000000000000000000019";
+	$mkey = bcpowmod($friend_val, $mkey, $prime_mod);
 
         $message = filter_var($message, FILTER_SANITIZE_STRING);
 

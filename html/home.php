@@ -190,16 +190,22 @@ else
 	<?php
 	$users = $conn->prepare("select accept_friend, username from users join friends on users.u_id=friends.accept_friend where send_friend=".$user_id." and accepted=1;");
 	$users->execute();
-	while($row = $users->fetch())
-	{
-        	echo "<label class='container'>";
-	        echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
-        	echo "</label>";
-	}
+	if($users->rowCount()>0)
+        {
+		while($row = $users->fetch())
+		{
+	        	echo "<label class='container'>";
+		        echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
+	        	echo "</label>";
+		}
 
 	?>
-	<input type="text" maxlength="1600" placeholder="Send a message..."name="message" autocomplete="off" required></input>
-	<input type="submit" name="send" value="Send"></input>
+		<input type="text" maxlength="1600" placeholder="Send a message..."name="message" autocomplete="off" required></input>
+		<input type="submit" name="send" value="Send"></input>
+	<?php
+	}
+	else{echo "Add a friend to message them!";}
+	?>
 	</form>
 	</div>
 
@@ -274,7 +280,10 @@ else
 		        $fetch_friendval->execute();
         		$f_row = $fetch_friendval->fetch();
 	        	$friend_val = $f_row['friend_val'];
-			$key = ((int)$friend_val * (int)$mkey) % 2048;
+
+			$prime_mod = "100000000000000000000000000000000000000000000000000000000019";
+			$key = bcpowmod($friend_val, $mkey, $prime_mod);
+
 			echo "<div id='".$row['sender']."'class='message'>";
 			echo "<table>";
 			$i = 0;
@@ -358,7 +367,7 @@ else
 	echo "<form method='post' action='friend_request.php' enctype='multipart/form-data'>";
         $users = $conn->prepare("select * from users where u_id !=".$user_id."");
         $users->execute();
-
+	$no_friends = 0;
 	$length = count($f_array);
         while($row = $users->fetch())
         {
@@ -373,15 +382,20 @@ else
                 }
 		if($chk == 0)
 		{
+			$no_friends = 1;
 			//echo " Succeed!</br>";
 			echo "<label class='container'>";
 			echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
 			echo "</label>";
 		}
         }//doesnt prevent applying for a friend request if one has been already sent atm (the person with the request already applying for one)
+	if($no_friends == 0)
+	{echo "No other accounts to add...";}
+
+	else
+	{echo "<input type='submit' name='send' value='Add friends'></input>";}
 
         ?>
-        <input type="submit" name="send" value="Add friends"></input>
         </form>
         </div>
 </div>

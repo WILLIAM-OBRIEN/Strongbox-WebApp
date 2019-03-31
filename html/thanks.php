@@ -9,7 +9,7 @@
 <div class="login-page">
 <div class="form">
 <h2>Thanks for signing up with Strongbox!</h2>
-<font size="2">Please check your email in a few minutes for an activation link. After clicking that link you will be able to activate and sign in to your account.
+<font size="2">Please check your email in a few minutes for an activation link (check spam aswell). After clicking that link you will be able to activate and sign in to your account.
 <p></p><a href="login.php">You can login here</a>
 </div>
 </form>

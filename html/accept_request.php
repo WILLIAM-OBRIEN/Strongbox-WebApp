@@ -48,7 +48,11 @@ function acceptrequest($id)
 
         //decrypt message key
         $mkey = $rsa->decrypt($mkey);
-        $friend_val = ($mkey * $base_val) % 2048;
+
+	$base_val = 2;
+	$prime_mod = "100000000000000000000000000000000000000000000000000000000019";
+
+	$friend_val = bcpowmod($base_val, $mkey, $prime_mod);
 
 	//inserting encrypted message into sql database
         $upload_file = $conn->prepare("insert into friends(send_friend, accept_friend, accepted, base_val, friend_val) values(?,?, 1,?,?)");

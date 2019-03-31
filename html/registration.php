@@ -15,6 +15,7 @@ if(isset($_REQUEST['submit']))
 	$username_check_statement = $conn->prepare("select * from users where username='".$Username."'");
         $username_check_statement->execute();
         $username_row = $username_check_statement->fetch();
+
         if(!empty($username_row ))
         {
                 echo('<script>alert("Username is already taken!");</script>');
@@ -70,7 +71,7 @@ if(isset($_REQUEST['submit']))
         		$rsa = new RSA();
 	        	$rsa->loadKey($publickey);
 
-			$message_key = rand(1000000,2000000000);//generate user message key (for sending messages)
+			$message_key = random_key(random_int(10,59));//generate user message key (for sending messages)
 
 		        $encrypted_message_key = $rsa->encrypt($message_key);//encrypt user message key
 
@@ -83,6 +84,18 @@ if(isset($_REQUEST['submit']))
 			echo('<script>window.location="thanks.php"</script>');
 		}
 	}
+}
+
+function random_key($length)
+{
+	$digits = '0123456789';
+	$number = '';
+	$max = strlen($digits);
+	for ($i = 0; $i < $length; ++$i)
+	{
+        	$number .= $digits[random_int(0, $max-1)];
+	}
+	return $number;
 }
 ?>
 <html>

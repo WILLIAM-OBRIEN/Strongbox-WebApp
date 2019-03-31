@@ -22,8 +22,6 @@ function sendrequest($receiver)
         $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
         $username = $_SESSION['logged'];
 
-	$base_val = rand(1000000,2000000000);
-
 	//-----begin key decryption process-----//
         $fetch_privatekey = $conn->prepare("select u_id, user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
         $fetch_privatekey->execute();
@@ -43,7 +41,11 @@ function sendrequest($receiver)
 
         //decrypt message key
         $mkey = $rsa->decrypt($mkey);
-	$friend_val = ($mkey * $base_val) % 2048;
+
+	$base_val = 2;
+	$prime_mod = "100000000000000000000000000000000000000000000000000000000019";
+
+	$friend_val = bcpowmod($base_val, $mkey, $prime_mod);
 
 	//inserting encrypted message into sql database
         $upload_file = $conn->prepare("insert into friends(send_friend, accept_friend, accepted, base_val, friend_val) values(?,?, 0,?,?)");
