@@ -80,7 +80,7 @@ if($seen_msg->rowCount() > 0)
 }
 else
 {
-		echo "window.onload = function(){document.getElementById('inbox_tab').click();}";
+		//echo "window.onload = function(){document.getElementById('inbox_tab').click();}";
 		echo "</script>";
 }
 
@@ -327,7 +327,6 @@ else
         </form>
         </div>
 
-
 	<!--**********Friends**********-->
         <div id="friends" class="file">
 	<form method="post" action="accept_request.php" enctype="multipart/form-data">
@@ -343,25 +342,38 @@ else
 		}
 	}
 	echo "</form>";
+
+	$friends = $conn->prepare("select accept_friend, send_friend from friends where send_friend=".$user_id." or accept_friend=".$user_id."");
+        $friends->execute();
+        $f_array = array();
+        $i = 0;
+        while($accept_row = $friends->fetch())
+        {
+                $f_array[$i]=$accept_row['send_friend'];
+                $i++;
+                $f_array[$i]=$accept_row['accept_friend'];
+                $i++;
+        }
+
 	echo "<form method='post' action='friend_request.php' enctype='multipart/form-data'>";
         $users = $conn->prepare("select * from users where u_id !=".$user_id."");
         $users->execute();
 
+	$length = count($f_array);
         while($row = $users->fetch())
         {
 		$chk = 0;
-		$friends = $conn->prepare("select accept_friend, send_friend from friends where send_friend=".$user_id." or accept_friend=".$user_id."");
-        	$friends->execute();
-		while($accept_row = $friends->fetch())
-		{
-
-			if($row['u_id']!=$accept_row['accept_friend'] && $row['u_id']!=$accept_row['send_friend'])
-			{
-				$chk = 1;
-			}
-		}
+                for ($i=0;$i<=$length-1;$i++)
+                {
+                        if($f_array[$i]==$row['u_id'])
+                        {
+                                //echo " Fail!</br>";
+                                $chk = 1;
+                        }
+                }
 		if($chk == 0)
 		{
+			//echo " Succeed!</br>";
 			echo "<label class='container'>";
 			echo "<input name='userID[]' type='checkbox' value='".$row['u_id']."'>".$row['username']."<span class='checkmark'></span>";
 			echo "</label>";
