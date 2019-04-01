@@ -11,12 +11,22 @@
   <button class="tablinks" id="message_tab"onclick="openTab(event, 'message')">Send Message</button>
   <button class="tablinks" id="inbox_tab"onclick="openTab(event, 'inbox')">Inbox</button>
   <button class="tablinks" id="friends_tab"onclick="openTab(event, 'friends')">Friends</button>
+  <button class="tablinks" id="account_tab"onclick="openTab(event, 'account')">Account</button>
   <button class="tablinks"  onclick="openTab(event, 'logout')"><b>Logout</b></button>
 </div>
 <script>
 	function close_modal(){
 	document.getElementById('modal').style.display = "none";
 	}
+	function close_delete(){
+        document.getElementById('warning').style.display = "none";
+        }
+	function open_warning(){
+        document.getElementById('warning').style.display = "block";
+        }
+	function delete_account(){
+	window.location="delete_account.php"
+        }
 	function openTab(evt, action) {
 	var i, tabcontent, tablinks;
 	if(action=="logout"){window.location.href = "logout.php";}
@@ -401,6 +411,37 @@ else
         </form>
         </div>
 
+
+	<!--**********account**********-->
+        <div id="account" class="file">
+        <?php
+        $users = $conn->prepare("select * from users where u_id=".$user_id."");
+        $users->execute();
+	$row = $users->fetch();
+	echo "<h2><b><u>" .$row['username']. "</u></b></h2>";
+	echo "<p><b>Phone number:  </b> ".$row['phone_number']."</p>";
+	echo "<p><b>Email address: </b>".$row['user_email']."</p>";
+	echo "</br>";
+
+	/*
+	echo "<h2>New message notification:</h2>";
+	echo "<label class='container'>";
+        echo "<input name='userID[]' type='radio' value='on'>On<span class='checkmark'></span>";
+        echo "</label>";
+
+	echo "<label class='container'>";
+        echo "<input name='userID[]' type='radio' value='off'>Off<span class='checkmark'></span>";
+        echo "</label>";
+
+        echo "<input type='submit' name='send' value='Save settings'></input>";*/
+	//echo "<form method='post'  action='delete_account.php' enctype='multipart/form-data'>";
+	//echo "<div id='warning'><div class='modalbox'><p>Are you sure you want to delete your account?</p><button onclick='close_modal()'>Close</button>";
+	echo "<input type='submit' style='background-color: #ED4337;color:white;' onclick='open_warning()' value='Delete account'></input>";
+        ?>
+        </div>
+	<div id='warning' style = 'display: none;'><div  class='modalbox'><p>Are you sure you want to delete your account?</p>
+	<button style='cursor: pointer;background-color: #ED4337;'onclick='delete_account()'>Yes</button>
+	<button style='cursor: pointer;' onclick='close_delete()'>No</button></div>
 </div>
 </body>
 </html>
