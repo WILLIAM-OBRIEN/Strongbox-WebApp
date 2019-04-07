@@ -9,12 +9,18 @@ if(!isset($_SESSION['logged']))
 
 $user_list = $_POST['userID'];
 $message = $_POST['message'];
-
 if(isset($_POST['send']) && isset($_POST['message']))
 {
-        foreach($user_list as $u_list)
+        if(strlen($message) < 1600)
         {
-		sendmessage($message, $u_list);
+                foreach($user_list as $u_list)
+                {
+                        sendmessage($message, $u_list);
+                }
+        }
+        else
+        {
+                echo('<script>Message is too long for sending!</script>');
         }
 }
 

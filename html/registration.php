@@ -7,6 +7,7 @@ if(isset($_REQUEST['submit']))
 	$Username=$_REQUEST['username'];
 	$Password=$_REQUEST['user_password'];
 	$Phone_number=$_REQUEST['phone_number'];
+	$Phone_number = substr_replace($Phone_number,"+353",0,1);
 	$Email=$_REQUEST['user_email'];
 	$verify_hash = md5(rand(0,1000));//generates hash to verify email account for activation
 	$active = 0;
@@ -41,7 +42,7 @@ if(isset($_REQUEST['submit']))
 			------------------------
 
 			Please click this link to activate your account:
-			http://www.strongboxencryption.com/verify.php?email='.$Email.'&hash='.$verify_hash.'';
+			https://www.strongboxencryption.com/verify.php?email='.$Email.'&hash='.$verify_hash.'';
 			exec(" echo '".$message."' | mail -s '".$subject."' ".$Email."");//sends email
 
 			//generate the private key for user
@@ -49,6 +50,7 @@ if(isset($_REQUEST['submit']))
 			$keys = $rsa->createKey(4096);
 			$Privatekey = $keys['privatekey'];
 			$Publickey = $keys['publickey'];
+			$Password = strval($Password);
 			$password_hash = hash('sha512', $Password, true);//generate key for encryption using given password
 			$E_privatekey = openssl_encrypt($Privatekey, 'aes-128-cbc' , $Password, OPENSSL_RAW_DATA , "1234567812345678");
 
@@ -99,6 +101,7 @@ function random_key($length)
 }
 ?>
 <html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
 <link rel="stylesheet" type="text/css" href="style.css">
 <meta charset="utf-8">
@@ -110,13 +113,13 @@ function random_key($length)
 <div class="form">
 <center>
 <form method="post" action="registration.php">
-	<input type="text" required name="username" placeholder="Enter a Username" autocomplete="off">
+	<input type="text" pattern=".{0}|.{6,}" maxlength=30 title="6 Characters Minimum"  required name="username" placeholder="Enter a Username" autocomplete="off">
 	<br>
-	<input type="password" pattern=".{0}|.{7,}" required title="7 characters minimum" name="user_password" placeholder="Enter a Password">
+	<input type="password" maxlength=30 pattern=".{0}|.{7,}" required title="7 Characters Minimum" name="user_password"  placeholder="Enter a Password (7+ Characters)">
 	<br>
-	<input type="text" required name="phone_number" placeholder="Enter your full phone no. (eg, +35387...)" autocomplete="off">
+	<input type="text" pattern="08[3679]\d{7}" title="Make sure correct number (087...)" maxlength=10 required name="phone_number" placeholder="Enter your Mobile Phone no. (eg, 087...)" autocomplete="off">
 	<br>
-	<input type="text" required name="user_email" placeholder="Enter your Email">
+	<input type="text" required name="user_email" maxlength=50 placeholder="Enter your Email">
 	<br>
 	<input type="submit" required name="submit" value="Register">
 </form>

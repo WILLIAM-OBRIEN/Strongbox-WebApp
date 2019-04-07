@@ -6,6 +6,7 @@ if(!isset($_SESSION['deleted']))
 }
 ?>
 <html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
 <link rel="shortcut icon" type="image/png" href="image.png">
 <link rel="stylesheet" type="text/css" href="style.css">
@@ -15,7 +16,7 @@ if(!isset($_SESSION['deleted']))
 <body>
 <div class="login-page">
 <div class="form">
-<p>Your account was successfully deleted. Thank you for trying out strongbox!</p>
+<p id='deletion_message'>Your account was successfully deleted. Thank you for trying out strongbox!</p>
 </div>
 </form>
 </div></div>

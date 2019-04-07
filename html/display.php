@@ -45,6 +45,15 @@
 	$method_1 = 'aes-256-cbc';
 	$file = openssl_decrypt($data, $method_1, $aes_key, OPENSSL_RAW_DATA, $aes_iv);//decrypts aes encyption part of file
 	$file = gzdecode($file);
+
+	//header("Content-Type: application/".$file_row['file_type']."");
+	header("Content-Type: ".$file_row['file_type']."");
+	header("Content-Disposition: attachment; filename=".$file_row['file_name']."");
+	header("Content-Transfer-Encoding: binary");
+	header('Expires: 0');
+	header('Pragma: no-cache');
+	header("Content-Length: ".strlen($file));
+
 	echo $file;//prints (now decrypted) out entire file contents
 	//-----end file decryption process-----//
 ?>

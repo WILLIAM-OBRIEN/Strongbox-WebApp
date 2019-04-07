@@ -1,4 +1,5 @@
 <html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
 <link rel="shortcut icon" type="image/png" href="image.png">
 <link rel="stylesheet" type="text/css" href="style.css">

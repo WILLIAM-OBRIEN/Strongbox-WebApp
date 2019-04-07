@@ -8,7 +8,7 @@ if(isset($_SESSION['logged']))
 
 if(isset($_SESSION['username']))
 {
-	session_destroy();
+        session_destroy();
 }
 
 if(isset($_REQUEST['submit']))
@@ -18,7 +18,9 @@ if(isset($_REQUEST['submit']))
 	$password_hash = hash('sha512', $password, true);
 
 	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
-	$login_statement = $conn->prepare("select * from users where username='".$username."' and password_hash ='".$password_hash."'");
+	$login_statement = $conn->prepare("select * from users where username=? and password_hash=?");
+	$login_statement->bindParam(1,$username);
+        $login_statement->bindParam(2,$password_hash);
 	$login_statement->execute();
 	$row = $login_statement->fetch();
 
@@ -35,7 +37,7 @@ if(isset($_REQUEST['submit']))
 
 	if(empty($row) || $row['active']== 0 || $count > 2)
 	{
-		if(!empty($ban_row) && $count <= 2)
+		if($row['active'] != 0 && !empty($ban_row) && $count <= 2)
 		{
 			//insert failed password attempt into the ban_table, 3 gives the user a 1 hour ban
 			$fail_insert = $conn->prepare("insert into ban_table(u_id, fail_attempt) values(?, CURRENT_TIMESTAMP)");
@@ -63,30 +65,36 @@ if(isset($_REQUEST['submit']))
 	else
 	{
 		//creates a session of the user for their username and password, the password will be used to decrypt uploaded files.
+		//disabled as sending messages costs money
+		/*
 		$_SESSION['username']=$username;
 		$_SESSION['pwd']=$password;
-		echo('<script>window.location="authenticate.php"</script>');
+		echo('<script>window.location="authenticate.php"</script>');*/
+		$_SESSION['logged']=$username;
+                $_SESSION['password']=$password;
+                echo('<script>window.location="home.php"</script>');
 	}
 	//session_destroy();
 }
 ?>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" type="image/png" href="image.png">
 <link rel="stylesheet" type="text/css" href="style.css">
 <meta charset="utf-8">
 <title>Login | Strongbox</title>
 </head>
+<centre>
 <body>
 <div class="login-page">
 <div class="form">
-<center>
 <form method="post" action="login.php">
 <img src=logofinal.png width="150" height="125"></img>
 <p><h2>Welcome to <a href="explain.php">Strongbox!</a></h2></p><p></p>
-    <input name="username" type="text" placeholder="Enter your username..." autocomplete="off">
+    <input name="username" maxlength=30 type="text" placeholder="Enter your username..." autocomplete="off">
     <br>
-    <input name="user_password"type="password" placeholder="Enter your password...">
+    <input name="user_password"type="password" maxlength=30 placeholder="Enter your password...">
     <br>
    <input type="submit" name="submit" value="Login">
     <br>

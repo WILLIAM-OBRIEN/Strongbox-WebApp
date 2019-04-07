@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head><title>Home | Strongbox</title>
 <link rel="shortcut icon" type="image/png" href="image.png">
 <link rel="stylesheet" type="text/css" href="style.css">
@@ -8,11 +9,11 @@
 <div class="tab">
   <button class="tablinks" id="upload_tab" onclick="openTab(event, 'upload_files')">My Files</button>
   <button class="tablinks" id="share_tab"onclick="openTab(event, 'share')">Share files</button>
-  <button class="tablinks" id="message_tab"onclick="openTab(event, 'message')">Send Message</button>
+  <button class="tablinks" id="message_tab"onclick="openTab(event, 'message')">Messages</button>
   <button class="tablinks" id="inbox_tab"onclick="openTab(event, 'inbox')">Inbox</button>
   <button class="tablinks" id="friends_tab"onclick="openTab(event, 'friends')">Friends</button>
   <button class="tablinks" id="account_tab"onclick="openTab(event, 'account')">Account</button>
-  <button class="tablinks"  onclick="openTab(event, 'logout')"><b>Logout</b></button>
+  <button class="tablinks" id="logout_tab" onclick="openTab(event, 'logout')"><b>Logout</b></button>
 </div>
 <script>
 	function close_modal(){
@@ -54,6 +55,16 @@
           document.getElementById(id).style.display = "block";
           evt.currentTarget.className += " active";
         }
+
+function checkFile(){
+var upload = document.getElementById("file_uploader");
+upload.onchange = function() {
+    if(this.files[0].size > 4194304){
+       alert("File is too big! (4MB Max)");
+       this.value = "";
+    }
+}
+}
 </script>
 <?php
 require __DIR__.'/vendor/autoload.php';
@@ -79,7 +90,7 @@ $seen_msg->execute();
 echo "<script>";
 if($seen_msg->rowCount() > 0)
 {
-		//echo "alert('You have unread messages!');";
+		//JavaScript function that navigates user to inbox and updates unseen messages to seen
 		echo "function open_mail(){ document.getElementById('inbox_tab').click();document.getElementById('all_msg').click();}";
 		echo "window.onload = function(){open_mail();}";
 		echo "</script>";
@@ -96,9 +107,9 @@ else
 
 //form used to require file for upload and password which will be used to generate a key for encryption/decryption
 ?>
-	<div  id="upload_files" class="file">
+	<div  id="upload_files" style="font-size:2vw;" class="file">
 	<form method="post" action="upload.php" enctype="multipart/form-data">
-	<input type="file" name="file_upload" required></input>
+	<input type="file" id="file_uploader" onclick="checkFile();" name="file_upload" required></input>
 	<input type="submit" name="upload" value="Upload"></input>
 	</form>
 <?php
@@ -107,7 +118,7 @@ else
 	$files->execute();
 	if($files->rowCount() > 0)
         {
-		echo "<table>";
+		echo "<table id='file_row'>";
 		echo "<tr>";
 		echo "<td><b>File</b></td>";
 		echo "<td><b>Size</b></td>";
@@ -123,6 +134,7 @@ else
 				if($size>=1){$size=round($size,1);echo "<td>". $size. "MB</td>";}
 				else{$size=round($size*1000,1);echo "<td>". $size. "KB</td>";}
 				echo "<td><font size=1>". $row['date']. "</font></td>";
+				echo "<td><a href='delete_file.php?id=".$row['f_id']."'>Delete</a></td>";
 				echo "</tr>";
 		}
 		echo "</table>";
@@ -138,16 +150,22 @@ else
 	{
 		echo "<h3><u>Shared Files</u></h3>";
      		//creates hyperlink for downloading files stored on database which are decrypted using stored key (will be changed to localised method in future)
+		echo "<table>";
+                echo "<tr>";
+                echo "<td><b>File</b></td>";
+                echo "<td><b>Shared By</b></td>";
+                echo "</tr><tr></tr>";
 	        while($row = $files->fetch())
 	        {
 			$owner = $conn->prepare("select username from users where u_id='".$row['owner_id']."'");
 			$owner->execute();
 			$owner_name = $owner->fetch();
-                	echo "<div>";
-	                echo "<a href='download.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a>";
-			echo "   shared by ".$owner_name['username']." ";
-                	echo "</div>";
+                	echo "<tr>";
+	                echo "<td><a href='download.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
+			echo "<td>".$owner_name['username']."</td><td><a href='delete_sharedfile.php?id=".$row['f_id']."'>Remove</a></td>";
+                	echo "</tr>";
 	        }
+		echo "</table>";
 	}
 	?>
 	<br>
@@ -200,7 +218,7 @@ else
 
 	<!--**********messaging**********-->
 	<div id="message" class="file">
-	<form method="post" action="send_message.php" enctype="multipart/form-data">
+	<form name="message_send" id="message_send" method="post" action="send_message.php" enctype="multipart/form-data">
 	<?php
 	$users = $conn->prepare("select accept_friend, username from users join friends on users.u_id=friends.accept_friend where send_friend=".$user_id." and accepted=1;");
 	$users->execute();
@@ -208,13 +226,13 @@ else
         {
 		while($row = $users->fetch())
 		{
-	        	echo "<label class='container'>";
+	        	echo "<label class='container' id='message_chk'>";
 		        echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
 	        	echo "</label>";
 		}
 
 	?>
-		<input type="text" maxlength="1600" placeholder="Send a message..."name="message" autocomplete="off" required></input>
+		<input type="text" id="message_text" maxlength="1600" placeholder="Send a message..."name="message" autocomplete="off" required></input>
 		<input type="submit" name="send" value="Send"></input>
 	<?php
 	}
@@ -317,8 +335,8 @@ else
 			echo "<form method='post' action='send_message.php' enctype='multipart/form-data'>";
 			echo "<p></p>";
 			echo "<input name='userID[]' style='display:none' checked type='checkbox' value='".$row['sender']."'>";
-			echo "<input type='text' name='message' autocomplete='off' required placeholder='Send a message...'></input>";
-			echo "<input type='submit' name='send' value='Send'></input>";
+			echo "<input type='text' maxlength='500' name='message' autocomplete='off' required placeholder='Reply to user...'></input> ";
+			echo "<input type='submit' name='send' id='send_messagebtn' value='Send'></input>";
 			echo "</form>";
 			echo "</div>";
                 }
@@ -349,7 +367,6 @@ else
 	</table>
         </form>
         </div>
-
 	<!--**********Friends**********-->
         <div id="friends" class="file">
 	<form method="post" action="accept_request.php" enctype="multipart/form-data">
@@ -358,14 +375,19 @@ else
         $requests->execute();
 	if($requests->rowCount()>0)
         {
+		echo "<table style='border-collapse: collapse;'>";
 		while($row = $requests->fetch())
         	{
-			echo "<input name='friend' type='checkbox' checked style='display:none' value='".$row['send_friend']."'>";
-			echo "<p>" .$row['username']. " sent you a friend request: <input type='submit' name='accept' value='Accept'></input></p>";
+			echo "<tr style='border: dotted 1px black;'><td><input name='friend' type='checkbox' checked style='display:none' value='".$row['send_friend']."'>";
+			echo "" .$row['username']. " sent you a friend request:</td><td></br><input type='submit' name='accept' value='Accept' id='accept_button'></input>";
+			echo "<input id='decline_button' type='submit' name='decline' value='Decline'></input></tr></td>";
 		}
+		echo "</table>";
 	}
 	echo "</form>";
 
+	echo "</br>";
+	echo "<h2>Add Friends: </h2>";
 	$friends = $conn->prepare("select accept_friend, send_friend from friends where send_friend=".$user_id." or accept_friend=".$user_id."");
         $friends->execute();
         $f_array = array();
@@ -436,12 +458,12 @@ else
         echo "<input type='submit' name='send' value='Save settings'></input>";*/
 	//echo "<form method='post'  action='delete_account.php' enctype='multipart/form-data'>";
 	//echo "<div id='warning'><div class='modalbox'><p>Are you sure you want to delete your account?</p><button onclick='close_modal()'>Close</button>";
-	echo "<input type='submit' style='background-color: #ED4337;color:white;' onclick='open_warning()' value='Delete account'></input>";
+	echo "<input type='submit' id='deleteButton' style='background-color: #ED4337;color:white;' onclick='open_warning()' value='Delete account'></input>";
         ?>
         </div>
 	<div id='warning' style = 'display: none;'><div  class='modalbox'><p>Are you sure you want to delete your account?</p>
-	<button style='cursor: pointer;background-color: #ED4337;'onclick='delete_account()'>Yes</button>
-	<button style='cursor: pointer;' onclick='close_delete()'>No</button></div>
+	<button id='delete_yes' style='cursor: pointer;background-color: #ED4337;'onclick='delete_account()'>Yes</button>
+	<button id='delete_no' style='cursor: pointer;' onclick='close_delete()'>No</button></div>
 </div>
 </body>
 </html>

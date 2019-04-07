@@ -12,6 +12,11 @@ if(isset($_POST['accept']))
 	acceptrequest($id);
 }
 
+if(isset($_POST['decline']))
+{
+        declinerequest($id);
+}
+
 function acceptrequest($id)
 {
         $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");//connect to online database
@@ -64,4 +69,20 @@ function acceptrequest($id)
 
 	header("Location: home.php");
 }
+
+function declinerequest($id)
+{
+        $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");//connect to online database
+        $username = $_SESSION['logged'];
+        $user_chk = $conn->prepare("select u_id from users where username='".$username."'");
+        $user_chk->execute();
+        $user_row = $user_chk->fetch();
+        $user_id = $user_row['u_id'];
+
+	$fetch_baseval = $conn->prepare("delete from friends where send_friend=".$id." and accept_friend=".$user_id." and accepted=0");
+        $fetch_baseval->execute();
+        $row = $fetch_baseval->fetch();
+	header("Location: home.php");
+}
+
 ?>
