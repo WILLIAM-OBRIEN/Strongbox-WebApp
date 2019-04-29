@@ -1,3 +1,6 @@
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
@@ -40,7 +43,7 @@ function acceptrequest($id)
         $fetch_privatekey->execute();
         $key_row = $fetch_privatekey->fetch();
         $encrypted_privatekey = $key_row['user_privatekey'];
-        $password = $_SESSION['password'];
+	$password = $_POST['hash'];
         $user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
         $rsa = new RSA();
         $rsa->loadKey($user_privatekey);
@@ -67,7 +70,7 @@ function acceptrequest($id)
         $upload_file->bindParam(4,$friend_val);
         $upload_file->execute();
 
-	header("Location: home.php");
+	echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 }
 
 function declinerequest($id)
@@ -82,7 +85,8 @@ function declinerequest($id)
 	$fetch_baseval = $conn->prepare("delete from friends where send_friend=".$id." and accept_friend=".$user_id." and accepted=0");
         $fetch_baseval->execute();
         $row = $fetch_baseval->fetch();
-	header("Location: home.php");
+
+	echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 }
 
 ?>
