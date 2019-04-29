@@ -1,3 +1,6 @@
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
@@ -28,7 +31,7 @@ function sendrequest($receiver)
         $key_row = $fetch_privatekey->fetch();
 	$user_id = $key_row['u_id'];
         $encrypted_privatekey = $key_row['user_privatekey'];
-        $password = $_SESSION['password'];
+	$password = $_POST['hash'];
         $user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
         $rsa = new RSA();
         $rsa->loadKey($user_privatekey);
@@ -57,6 +60,6 @@ function sendrequest($receiver)
 
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
-        	header("Location: home.php");
+		echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 	}
 }

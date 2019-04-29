@@ -1,4 +1,6 @@
-<body>
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
@@ -48,7 +50,7 @@ function insertfiles($file_id, $shared_id)
 	$key_row = $fetch_privatekey->fetch();
 	$encrypted_privatekey = $key_row['user_privatekey'];
 	//$password = $key_row['user_password'];//get user password to decrypt user private key
-	$password = $_SESSION['password'];
+	$password = $_GET['hash'];
 	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
 	$rsa = new RSA();
 	$rsa->loadKey($user_privatekey);
@@ -120,8 +122,7 @@ function insertfiles($file_id, $shared_id)
 }
 if($_SERVER['REQUEST_METHOD'] == 'GET')
 {
-	echo "<script type='text/javascript'>alert('File(s) shared successfully!');</script>";//doesn't seem to appear at the moment...
-	header("Location: home.php");
+	echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 }
 ?>
 </body>

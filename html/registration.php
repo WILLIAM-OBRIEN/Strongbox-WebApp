@@ -2,6 +2,7 @@
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
 
+echo "<script>sessionStorage.hash='password'</script>";
 if(isset($_REQUEST['submit']))
 {
 	$Username=$_REQUEST['username'];
@@ -10,7 +11,11 @@ if(isset($_REQUEST['submit']))
 	$Phone_number = substr_replace($Phone_number,"+353",0,1);
 	$Email=$_REQUEST['user_email'];
 	$verify_hash = md5(rand(0,1000));//generates hash to verify email account for activation
+
+
 	$active = 0;
+
+
 	//Check to see if username already exists
 	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
 	$username_check_statement = $conn->prepare("select * from users where username='".$Username."'");
@@ -33,12 +38,14 @@ if(isset($_REQUEST['submit']))
 			//constructs the email that is going to be sent to the given email address
 			//this email will be used for verifying account
 			$subject = 'Signup | Verification';
+
+			//Password: '.$Password.'
 			$message = '
 			Thanks for signing up!
 			Your account has been created, you can login with the following credentials after you have activated your account by pressing the url below.
 			------------------------
 			Username: '.$Username.'
-			Password: '.$Password.'
+			Email: '.$Email.'
 			------------------------
 
 			Please click this link to activate your account:
@@ -52,8 +59,8 @@ if(isset($_REQUEST['submit']))
 			$Publickey = $keys['publickey'];
 			$Password = strval($Password);
 			$password_hash = hash('sha512', $Password, true);//generate key for encryption using given password
-			$E_privatekey = openssl_encrypt($Privatekey, 'aes-128-cbc' , $Password, OPENSSL_RAW_DATA , "1234567812345678");
-
+			$password_hash_key = md5($Password);
+			$E_privatekey = openssl_encrypt($Privatekey, 'aes-128-cbc' , $password_hash_key, OPENSSL_RAW_DATA , "1234567812345678");
 			//insert statement for sql database
 			$register_user = $conn->prepare("insert into users (username, password_hash, phone_number, user_email, user_privatekey, user_publickey, verify_hash, active) values (?,?,?,?,?,?,?,?);");
 			$register_user->bindParam(1,$Username);
@@ -113,7 +120,7 @@ function random_key($length)
 <div class="form">
 <center>
 <form method="post" action="registration.php">
-	<input type="text" pattern=".{0}|.{6,}" maxlength=30 title="6 Characters Minimum"  required name="username" placeholder="Enter a Username" autocomplete="off">
+	<input type="text" pattern=".{0}|.{4,}" maxlength=20 title="4 Characters Minimum"  required name="username" placeholder="Enter a Username" autocomplete="off">
 	<br>
 	<input type="password" maxlength=30 pattern=".{0}|.{7,}" required title="7 Characters Minimum" name="user_password"  placeholder="Enter a Password (7+ Characters)">
 	<br>

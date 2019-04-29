@@ -1,3 +1,6 @@
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
@@ -68,7 +71,7 @@ if(isset($_POST['upload']))
 	//forces a redirect so a form isn't submitted multiple times
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
-		header("Location: home.php");
+		echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 	}
 }
 //form used to require file for upload and password which will be used to generate a key for encryption/decryption

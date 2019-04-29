@@ -1,9 +1,27 @@
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+function send_hash() {
+          $.ajax({
+        url:"registration.php",
+        type: "POST",
+	dataType: "json",
+        data:"hash="+ sessionStorage.hash,
+	dataType:'json',
+        success: function(data){console.log(data);window.location="registration.php";},
+	error: function(jqxhr, status, exception) {
+             alert('Exception:', exception);
+         }
+        });
+}
+</script>
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
 session_start();
-
 if(isset($_SESSION['logged']))
 {
-	echo("<script>window.location='home.php'</script>");
+	echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 }
 
 if(isset($_SESSION['username']))
@@ -25,7 +43,8 @@ if(isset($_REQUEST['submit']))
 	$row = $login_statement->fetch();
 
 	//this whole section checks to see if the user has either entered incorrect information, account is unactivated or is banned for failed password attempts
-	$ban_statement = $conn->prepare("select u_id from users where username='".$username."'");
+	$ban_statement = $conn->prepare("select * from users where username=?");
+	$ban_statement->bindParam(1,$username);
         $ban_statement->execute();
         $ban_row = $ban_statement->fetch();
 
@@ -34,10 +53,12 @@ if(isset($_REQUEST['submit']))
         $fail_attempts->execute();
         $fail_row = $fail_attempts->fetch();
         $count = (int)$fail_row['count(*)'];
+	$active_st = (int)$ban_row['active'];
 
 	if(empty($row) || $row['active']== 0 || $count > 2)
 	{
-		if($row['active'] != 0 && !empty($ban_row) && $count <= 2)
+		echo('<script>alert("".$active_st."");</script>');
+		if($active_st != 0 && $count <= 2)
 		{
 			//insert failed password attempt into the ban_table, 3 gives the user a 1 hour ban
 			$fail_insert = $conn->prepare("insert into ban_table(u_id, fail_attempt) values(?, CURRENT_TIMESTAMP)");
@@ -56,6 +77,10 @@ if(isset($_REQUEST['submit']))
 		                echo('<script>alert("Incorrect username/password! Your account has been banned for one hour...");</script>');
 	                }
 		}
+		else if ($count>2)
+		{
+			echo('<script>alert("User is currently banned!");</script>');
+		}
 		else
 		{
 			echo('<script>alert("Incorrect username/password!");</script>');
@@ -66,13 +91,14 @@ if(isset($_REQUEST['submit']))
 	{
 		//creates a session of the user for their username and password, the password will be used to decrypt uploaded files.
 		//disabled as sending messages costs money
-		/*
-		$_SESSION['username']=$username;
-		$_SESSION['pwd']=$password;
-		echo('<script>window.location="authenticate.php"</script>');*/
+
+		//$_SESSION['username']=$username;
+		//$_SESSION['pwd']=$password;
+		//echo('<script>window.location="authenticate.php"</script>');*/
 		$_SESSION['logged']=$username;
-                $_SESSION['password']=$password;
-                echo('<script>window.location="home.php"</script>');
+		$password_hash = md5($password);
+		echo "<script>sessionStorage.hash='".$password_hash."';</script>";
+                echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 	}
 	//session_destroy();
 }
@@ -92,11 +118,11 @@ if(isset($_REQUEST['submit']))
 <form method="post" action="login.php">
 <img src=logofinal.png width="150" height="125"></img>
 <p><h2>Welcome to <a href="explain.php">Strongbox!</a></h2></p><p></p>
-    <input name="username" maxlength=30 type="text" placeholder="Enter your username..." autocomplete="off">
+    <input name="username" maxlength=20 type="text" placeholder="Enter your username..." autocomplete="off">
     <br>
     <input name="user_password"type="password" maxlength=30 placeholder="Enter your password...">
     <br>
-   <input type="submit" name="submit" value="Login">
+   <input type="submit" name="submit" "value="Login">
     <br>
    Need an account? <a href="registration.php">Register here</a>
 

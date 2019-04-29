@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -5,6 +6,7 @@
 <link rel="shortcut icon" type="image/png" href="image.png">
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <body>
 <div class="tab">
   <button class="tablinks" id="upload_tab" onclick="openTab(event, 'upload_files')">My Files</button>
@@ -13,7 +15,7 @@
   <button class="tablinks" id="inbox_tab"onclick="openTab(event, 'inbox')">Inbox</button>
   <button class="tablinks" id="friends_tab"onclick="openTab(event, 'friends')">Friends</button>
   <button class="tablinks" id="account_tab"onclick="openTab(event, 'account')">Account</button>
-  <button class="tablinks" id="logout_tab" onclick="openTab(event, 'logout')"><b>Logout</b></button>
+  <button style="float:right;" class="tablinks" id="logout_tab" onclick="openTab(event, 'logout')"><b>Logout</b></button>
 </div>
 <script>
 	function close_modal(){
@@ -40,6 +42,7 @@
 	tablinks[i].className = tablinks[i].className.replace(" active", "");
 	}
 	document.getElementById(action).style.display = "block";
+	//if(action="inbox"){document.getElementById("inbox").style.paddingLeft= "0px";}
 	evt.currentTarget.className += " active";
 	}
 	function openMessages(evt, id) {
@@ -59,21 +62,35 @@
 function checkFile(){
 var upload = document.getElementById("file_uploader");
 upload.onchange = function() {
-    if(this.files[0].size > 4194304){
-       alert("File is too big! (4MB Max)");
+    if(this.files[0].size > 10485760){
+       alert("File is too big! (10MB Max)");
        this.value = "";
     }
 }
 }
+
+function send_hash() {
+          $.ajax({
+            url:"home.php",
+            type: "POST",
+            dataType: "json",
+           data: {"hash": sessionStorage.hash}
+         });
+     }
 </script>
+
 <?php
 require __DIR__.'/vendor/autoload.php';
 use phpseclib\Crypt\RSA;
 session_start();
+$password = $_POST['hash'];
+
+if(isset($_POST['hash'])){
 if(!isset($_SESSION['logged']))
 {
-        echo('<script>window.location="login.php"</script>');
+     echo('<script>window.location="login.php"</script>');
 }
+
 //connect to online sql database
 $conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");
 
@@ -101,13 +118,12 @@ if($seen_msg->rowCount() > 0)
 }
 else
 {
-		//echo "window.onload = function(){document.getElementById('inbox_tab').click();}";
 		echo "</script>";
 }
 
 //form used to require file for upload and password which will be used to generate a key for encryption/decryption
 ?>
-	<div  id="upload_files" style="font-size:2vw;" class="file">
+	<div  id="upload_files" class="file">
 	<form method="post" action="upload.php" enctype="multipart/form-data">
 	<input type="file" id="file_uploader" onclick="checkFile();" name="file_upload" required></input>
 	<input type="submit" name="upload" value="Upload"></input>
@@ -118,11 +134,11 @@ else
 	$files->execute();
 	if($files->rowCount() > 0)
         {
-		echo "<table id='file_row'>";
+		echo "<table style='font-size:2.3vw;'>";
 		echo "<tr>";
-		echo "<td><b>File</b></td>";
-		echo "<td><b>Size</b></td>";
-		echo "<td><b>Upload date</b></td>";
+		echo "<td class='file_row'><b>File</b></td>";
+		echo "<td class='file_row'><b>Size</b></td>";
+		echo "<td class='file_row'><b>Upload Date</b></td>";
 		echo "</tr><tr></tr>";
 		//creates hyperlink for downloading files stored on database which are decrypted using stored key (will be changed to localised method in future)
 		while($row = $files->fetch())
@@ -130,11 +146,16 @@ else
 				$size = (int)strlen($row['file_data']);
 				$size = $size/1000000;
 				echo "<tr>";
-				echo "<td><a href='display.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
-				if($size>=1){$size=round($size,1);echo "<td>". $size. "MB</td>";}
-				else{$size=round($size*1000,1);echo "<td>". $size. "KB</td>";}
-				echo "<td><font size=1>". $row['date']. "</font></td>";
-				echo "<td><a href='delete_file.php?id=".$row['f_id']."'>Delete</a></td>";
+				if(strlen($row['file_name'])>30){
+				//echo "check</br>";
+		echo "<td class='file_row'><a href='display.php?id=".$row['f_id']."&hash=".$password."' target='_blank' download='".$row['file_name']."' style='font-size:1.1vw;'>".$row['file_name']."</a></td>";
+				}
+				else{
+				echo "<td class='file_row'><a href='display.php?id=".$row['f_id']."&hash=".$password."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";}
+				if($size>=1){$size=round($size,1);echo "<td class='file_row'>". $size. "MB</td>";}
+				else{$size=round($size*1000,1);echo "<td class='file_row'>". $size. "KB</td>";}
+				echo "<td class='file_row'>". $row['date']. "</td>";
+				echo "<td class='file_row'><a href='delete_file.php?id=".$row['f_id']."&hash=".$password."'>Delete</a></td>";
 				echo "</tr>";
 		}
 		echo "</table>";
@@ -150,10 +171,10 @@ else
 	{
 		echo "<h3><u>Shared Files</u></h3>";
      		//creates hyperlink for downloading files stored on database which are decrypted using stored key (will be changed to localised method in future)
-		echo "<table>";
+		echo "<table style='font-size:3vw;'>";
                 echo "<tr>";
-                echo "<td><b>File</b></td>";
-                echo "<td><b>Shared By</b></td>";
+                echo "<td class='file_row'><b>File</b></td>";
+                echo "<td class='file_row'><b>Shared By</b></td>";
                 echo "</tr><tr></tr>";
 	        while($row = $files->fetch())
 	        {
@@ -161,8 +182,8 @@ else
 			$owner->execute();
 			$owner_name = $owner->fetch();
                 	echo "<tr>";
-	                echo "<td><a href='download.php?id=".$row['f_id']."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
-			echo "<td>".$owner_name['username']."</td><td><a href='delete_sharedfile.php?id=".$row['f_id']."'>Remove</a></td>";
+	                echo "<td class='file_row'><a href='download.php?id=".$row['f_id']."&hash=".$password."' target='_blank' download='".$row['file_name']."'>".$row['file_name']."</a></td>";
+			echo "<td class='file_row'>".$owner_name['username']."</td><td class='file_row'><a href='delete_sharedfile.php?id=".$row['f_id']."&hash=".$password."'>Remove</a></td>";
                 	echo "</tr>";
 	        }
 		echo "</table>";
@@ -183,8 +204,11 @@ else
 		echo "<form action= 'shareinsert.php' method= 'get'>";
 		while($row = $files->fetch())
 		{
-			echo "<label class='container'>";
-			echo "<input name='fileID[]' type='checkbox' value='".$row['f_id']."'>".$row['file_name']."<span class='checkmark'></span>";
+			if(strlen($row['file_name'])>30){echo "<label class='container' style='font-size:1.5vw;'>";
+			echo "<input name='fileID[]' type='checkbox' value='".$row['f_id']."'style='font-size:1.1vw;' >".$row['file_name']."<span class='checkmark'></span>";
+			}
+			else{echo "<label class='container'>";
+			echo "<input name='fileID[]' type='checkbox' value='".$row['f_id']."'>".$row['file_name']."<span class='checkmark'></span>";}
 			echo "</label>";
 		}
 
@@ -200,6 +224,7 @@ else
 				echo "<input name='userID[]' type='checkbox' value='".$row['accept_friend']."'>".$row['username']."<span class='checkmark'></span>";
 				echo "</label>";
 			}
+			echo "<input type='hidden' id='p_hash' name='hash' value=".$password."/>";
 			echo "<center><input type='submit' value='Share File(s)'/></center>";
 			echo "</form>";
 		}
@@ -237,6 +262,7 @@ else
 	<?php
 	}
 	else{echo "Add a friend to message them!";}
+	echo "<input type='hidden' id='p_hash' name='hash' value=".$password."/>";
 	?>
 	</form>
 	</div>
@@ -246,23 +272,14 @@ else
 
 
 	<!--**********inbox**********-->
-        <div id="inbox" class="file">
+        <div id="inbox" class="file" style="padding-left: 0px;width: 120%;">
 	<link rel="stylesheet" type="text/css" href="style.css">
         <?php
-	$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
-	$fetch_privatekey->execute();
-	$key_row = $fetch_privatekey->fetch();
-	$encrypted_privatekey = $key_row['user_privatekey'];
-	$password = $_SESSION['password'];
-	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their passwo$
-	$rsa = new RSA();
-	$rsa->loadKey($user_privatekey);
-
 	$senders = $conn->prepare("select username, sender from messages join users on messages.sender=users.u_id where receiver=".$user_id." group by u_id");
         $senders->execute();
 	if($senders->rowCount()>0)
 	{
-		echo "<table class='m_table'>";
+		echo "<table class='m_table' style='width:100%'>";
                 echo "<tr>";
                 echo "<td>";
 
@@ -281,24 +298,25 @@ else
 		echo "<td>";
 
 		//-----First lets get the private key, decrypt the message key and then decrypt and view the message-----//
-        	$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
-	        $fetch_privatekey->execute();
-        	$key_row = $fetch_privatekey->fetch();
-        	$encrypted_privatekey = $key_row['user_privatekey'];
-	        $password = $_SESSION['password'];
-	        $user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
-        	$rsa = new RSA();
-	        $rsa->loadKey($user_privatekey);
-
 		//code to get the receivers message key decrypt it using their private key and then decrypt the message
+		$password = $_POST['hash'];
         	$get_messagekey= $conn->prepare("select m_key from message_keys where u_id=".$user_id."");
 	        $get_messagekey->execute();
         	$msg_row = $get_messagekey->fetch();
 	        $mkey = $msg_row['m_key'];
+		$fetch_privatekey = $conn->prepare("select user_privatekey from users where username='".$username."'");//gets private key linked to user (in encrypted format)
+		$fetch_privatekey->execute();
+		$key_row = $fetch_privatekey->fetch();
+		$encrypted_privatekey = $key_row['user_privatekey'];
+		$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their passwo$
+		$rsa = new RSA();
+		$rsa->loadKey($user_privatekey);
 
         	//decrypt message key
 	        $mkey = $rsa->decrypt($mkey);
-
+/////////////////////
+		echo $mkey;
+		echo $password;
 		$m_array = array();
 
 		//create messages for each user found to have sent a message for this user
@@ -316,8 +334,9 @@ else
 			$prime_mod = "100000000000000000000000000000000000000000000000000000000019";
 			$key = bcpowmod($friend_val, $mkey, $prime_mod);
 
+			//here is where messages are decrypted and displayed to the user
 			echo "<div id='".$row['sender']."'class='message'>";
-			echo "<table>";
+			echo "<table style='width:100%'>";
 			$i = 0;
 			$m_array[$i] = array();
 			while($m_row = $get_messages->fetch())
@@ -332,10 +351,11 @@ else
 			}
 			echo "</table>";
 			//this is the reply function
-			echo "<form method='post' action='send_message.php' enctype='multipart/form-data'>";
+			echo "<form method='post' style='padding-bottom: 5px;' action='send_message.php' enctype='multipart/form-data'>";
 			echo "<p></p>";
 			echo "<input name='userID[]' style='display:none' checked type='checkbox' value='".$row['sender']."'>";
-			echo "<input type='text' maxlength='500' name='message' autocomplete='off' required placeholder='Reply to user...'></input> ";
+			echo "<input type='text' maxlength='500' name='message' autocomplete='off' style='margin:0;' required placeholder='Reply to user...'></input> ";
+			echo "<input type='hidden' id='p_hash' name='hash' value=".$password."/>";
 			echo "<input type='submit' name='send' id='send_messagebtn' value='Send'></input>";
 			echo "</form>";
 			echo "</div>";
@@ -347,19 +367,20 @@ else
                 }
                 usort($m_array, "sortFunction");
 
+		//this is the all messages inbox
 		echo "<div id='0'class='message'>";
-		echo "<table>";
+		echo "<table style='width:100%'>";
 		$length = count($m_array);
 		for ($i=0;$i<=$length-1;$i++)
 		{
-			echo "<tr><td class='message_text'>" .$m_array[$i]['message']."</td><td class='date_text'><p>" .$m_array[$i]['date']."</p>from ".$m_array[$i]['id']."</td></tr>";
+			echo "<tr><td class='message_text'>" .$m_array[$i]['message']."</td><td class='date_text'>" .$m_array[$i]['date']."</br>from ".$m_array[$i]['id']."</td></tr>";
 		}
 		echo "</table>";
 		echo "</div>";
 	}
 	else
         {
-		echo "No messages...";
+		echo "<center>No messages...</center>";
 	}
         ?>
 	</td>
@@ -383,10 +404,11 @@ else
 			echo "<input id='decline_button' type='submit' name='decline' value='Decline'></input></tr></td>";
 		}
 		echo "</table>";
+		echo "</br>";
 	}
+	echo "<input type='hidden' id='p_hash' name='hash' value=".$password."/>";
 	echo "</form>";
 
-	echo "</br>";
 	echo "<h2>Add Friends: </h2>";
 	$friends = $conn->prepare("select accept_friend, send_friend from friends where send_friend=".$user_id." or accept_friend=".$user_id."");
         $friends->execute();
@@ -425,6 +447,7 @@ else
 			echo "</label>";
 		}
         }//doesnt prevent applying for a friend request if one has been already sent atm (the person with the request already applying for one)
+	echo "<input type='hidden' id='p_hash' name='hash' value=".$password."/>";
 	if($no_friends == 0)
 	{echo "No other accounts to add...";}
 	else
@@ -445,25 +468,19 @@ else
 	echo "<p><b>Email address: </b>".$row['user_email']."</p>";
 	echo "</br>";
 
-	/*
-	echo "<h2>New message notification:</h2>";
-	echo "<label class='container'>";
-        echo "<input name='userID[]' type='radio' value='on'>On<span class='checkmark'></span>";
-        echo "</label>";
-
-	echo "<label class='container'>";
-        echo "<input name='userID[]' type='radio' value='off'>Off<span class='checkmark'></span>";
-        echo "</label>";
-
-        echo "<input type='submit' name='send' value='Save settings'></input>";*/
 	//echo "<form method='post'  action='delete_account.php' enctype='multipart/form-data'>";
 	//echo "<div id='warning'><div class='modalbox'><p>Are you sure you want to delete your account?</p><button onclick='close_modal()'>Close</button>";
 	echo "<input type='submit' id='deleteButton' style='background-color: #ED4337;color:white;' onclick='open_warning()' value='Delete account'></input>";
         ?>
         </div>
 	<div id='warning' style = 'display: none;'><div  class='modalbox'><p>Are you sure you want to delete your account?</p>
-	<button id='delete_yes' style='cursor: pointer;background-color: #ED4337;'onclick='delete_account()'>Yes</button>
-	<button id='delete_no' style='cursor: pointer;' onclick='close_delete()'>No</button></div>
+	<button id='delete_yes' style='cursor: pointer;border:solid black 1px;background-color: #ED4337;'onclick='delete_account()'>Yes</button>
+	<button id='delete_no' style='cursor: pointer;background-color: #ccc;border:solid grey 1px;' onclick='close_delete()'>No</button></div>
 </div>
 </body>
 </html>
+<?php }
+else{
+	echo "<script>window.location.href = 'logout.php';</script>";
+}
+?>

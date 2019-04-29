@@ -1,3 +1,6 @@
+<form method="POST" action="home.php" id="send_hash">
+<input type="hidden" id="p_hash" name="hash"/>
+</form>
 <?php
         require __DIR__.'/vendor/autoload.php';
         use phpseclib\Crypt\RSA;
@@ -13,5 +16,5 @@
         $files = $conn->prepare("delete from sharedfilestorage where f_id=?");//selects file with id selected on home pa$
         $files->bindParam(1,$id);
         $files->execute();
-        echo('<script>window.location="home.php"</script>');
+	echo("<script>document.getElementById('p_hash').value = sessionStorage.hash;document.getElementById('send_hash').submit();</script>");
 ?>

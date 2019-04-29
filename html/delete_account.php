@@ -31,6 +31,6 @@ $deletes->execute();
 unset($_SESSION['logged']);
 unset($_SESSION['password']);
 $_SESSION['deleted']="gonzo";
-echo('<script>window.location="goodbye.php"</script>');
+echo('<script>sessionStorage.hash="";window.location="goodbye.php"</script>');
 
 ?>

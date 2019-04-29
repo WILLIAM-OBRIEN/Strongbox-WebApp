@@ -10,6 +10,7 @@
 	$conn = new PDO("mysql:host=35.205.202.112;dbname=Users","root","mtD{];ttcY^{9@>`");//connect to online database
 
 	$id = isset($_GET['id'])? $_GET['id'] : "";
+	$password = $_GET['hash'];
 	$files = $conn->prepare("select * from filestorage where f_id=?");//selects file with id selected on home page
 	$files->bindParam(1,$id);
 	$files->execute();
@@ -21,8 +22,6 @@
 	$fetch_privatekey->execute();
 	$key_row = $fetch_privatekey->fetch();
 	$encrypted_privatekey = $key_row['user_privatekey'];
-	//$password = $key_row['user_password'];//get user password to decrypt user private key
-	$password = $_SESSION['password'];
 	$user_privatekey = openssl_decrypt($encrypted_privatekey, 'aes-128-cbc' , $password, OPENSSL_RAW_DATA ,"1234567812345678");//decrypts private key linked to user using their password
 	$rsa = new RSA();
 	$rsa->loadKey($user_privatekey);
